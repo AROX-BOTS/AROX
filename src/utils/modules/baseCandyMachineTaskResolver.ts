@@ -114,7 +114,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                     ))
                 }
 
-                const allTransactionsResult = await Promise.all(promiseArray)
+                const allTransactionsResult = await Promise.all(promiseArray) // alle de TX ID's fra mints er i signedTransactions
                 let totalSuccess = 0;
                 let totalFailure = 0;
 

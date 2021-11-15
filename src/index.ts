@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {StartTasks} from './utils/taskInitializer';
 import * as readline from 'readline';
+import {ConfigLoader} from "./utils/configLoader";
+import {AuthenticateUser} from "./utils/authenticationHandler";
 
 
 /*
@@ -12,9 +14,9 @@ Alt andet SKAL være async. Både for concurrency men også performance :)
 
 const appdataPath = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME : process.env.HOME + "/.local/share");
 // @ts-ignore
-const configFolder = path.join(appdataPath, 'SolBotTest');
+const configFolder = path.join(appdataPath, 'SAB');
 // @ts-ignore
-const walletFolder = path.join(appdataPath, 'SolBotTest', 'Wallets');
+const walletFolder = path.join(appdataPath, 'SAB', 'Wallets');
 
 if (!fs.existsSync(configFolder)){
     fs.mkdirSync(configFolder);
@@ -22,6 +24,14 @@ if (!fs.existsSync(configFolder)){
 
 if (!fs.existsSync(walletFolder)){
     fs.mkdirSync(walletFolder);
+}
+
+const initializationSteps = async (): Promise<void> => {
+    await ConfigLoader();
+    const validKey = await AuthenticateUser();
+    if(!validKey){
+        process.exit(1);
+    }
 }
 
 const startUpSelections = async (): Promise<void>  => {
@@ -51,10 +61,5 @@ const startUpSelections = async (): Promise<void>  => {
     });
 }
 
-startUpSelections().then();
-//todo: implement license keys, webhooks, etc. etc. etc.
 
-//let taskArray = [];
-//taskArray.push(runner(wallet, "https://www.cybersol.io/"));
-
-//Promise.allSettled(taskArray).then();
+initializationSteps().then(startUpSelections);

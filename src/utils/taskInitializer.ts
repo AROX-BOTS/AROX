@@ -7,7 +7,7 @@ import {LoadWallet} from "./walletLoader";
 
 const appdataPath = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME : process.env.HOME + "/.local/share");
 // @ts-ignore
-const taskPath = path.join(appdataPath, 'SolBotTest', 'Tasks.csv');
+const taskPath = path.join(appdataPath, 'SAB', 'Tasks.csv');
 
 
 const LoadTasks = async(): Promise<[]> => {
