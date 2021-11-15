@@ -13,7 +13,7 @@ export const LoadWallet = async (walletName: string | undefined): Promise<anchor
 
     walletName = walletName+".txt";
     // @ts-ignore
-    const totalWalletPath = path.join(appdataPath, 'SolBotTest', 'Wallets', walletName);
+    const totalWalletPath = path.join(appdataPath, 'SAB', 'Wallets', walletName);
     let walletExists;
    /* fs.stat(totalWalletPath, function(err, stat) {
         if(err == null) {
