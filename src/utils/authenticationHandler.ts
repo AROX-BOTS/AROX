@@ -1,6 +1,7 @@
 import got from "got";
 import {LicenseKey} from "./configLoader";
 import {machineId} from 'node-machine-id';
+import {sleep} from "./candy-machine";
 
 export const AuthenticateUser = async(): Promise<boolean> => {
     let validKey: boolean = false;
@@ -12,6 +13,7 @@ export const AuthenticateUser = async(): Promise<boolean> => {
                     licensekey: LicenseKey,
                     hardwareId: hwid
                 }});
+            await sleep(500);
             statCode = statusCode;
         } catch(e){
             if (e instanceof got.HTTPError) {
