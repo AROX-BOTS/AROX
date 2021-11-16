@@ -6,11 +6,20 @@ export const AuthenticateUser = async(): Promise<boolean> => {
     let validKey: boolean = false;
     await new Promise(async (resolve, reject) => {
         const hwid = await machineId();
-        const {statusCode} = await got.post("https://sab-api.ey.r.appspot.com/api/handle-hardware-id", {json: {
-                licensekey: LicenseKey,
-                hardwareId: hwid
-        }});
-        if(statusCode !== 200){
+        let statCode;
+        try{
+            const {statusCode} = await got.post("https://sab-api.ey.r.appspot.com/api/handle-hardware-id", {json: {
+                    licensekey: LicenseKey,
+                    hardwareId: hwid
+                }});
+            statCode = statusCode;
+        } catch(e){
+            if (e instanceof got.HTTPError) {
+                validKey = false;
+                resolve(validKey);
+            }
+        }
+        if(statCode !== 200){
             validKey = false;
             resolve(validKey);
         } else{
