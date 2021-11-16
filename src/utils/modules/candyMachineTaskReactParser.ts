@@ -127,19 +127,19 @@ async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, 
             break;
         }
         case "3":{
-            const rpcRegex = /REACT_APP_SOLANA_RPC_HOST:".{1,150}",/.exec(chunkSiteBody);
+            const rpcRegex = /REACT_APP_SOLANA_RPC_HOST:".{1,150}"/.exec(chunkSiteBody);
             if (!rpcRegex) {
                 log({taskId: taskId, message: "Cannot parse site with this parse setting (1)", type: "error"});
                 return;
             }
             rpcHostStringObject = rpcRegex[0];
-            const cmConfigRegex = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}",/.exec(chunkSiteBody);
+            const cmConfigRegex = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}"/.exec(chunkSiteBody);
             if (!cmConfigRegex) {
                 log({taskId: taskId, message: "Cannot parse site with this parse setting (2)", type: "error"});
                 return;
             }
             candyMachineConfigStringObject = cmConfigRegex[0];
-            const cmIdRegex = /REACT_APP_CANDY_MACHINE_ID:".{1,50}",/.exec(chunkSiteBody);
+            const cmIdRegex = /REACT_APP_CANDY_MACHINE_ID:".{1,50}"/.exec(chunkSiteBody);
             if (!cmIdRegex) {
                 log({taskId: taskId, message: "Cannot parse site with this parse setting (3)", type: "error"});
                 return;
@@ -157,7 +157,7 @@ async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, 
                 return;
             }
             candyMachineTreasuryStringObject = treasuryRegex[0];
-            const candyMachineNetworkNameRegex = /REACT_APP_SOLANA_NETWORK:".{1,50}",/.exec(chunkSiteBody);
+            const candyMachineNetworkNameRegex = /REACT_APP_SOLANA_NETWORK:".{1,20}"/.exec(chunkSiteBody);
             if (!candyMachineNetworkNameRegex) {
                 log({taskId: taskId, message: "Cannot parse site with this parse setting (6)", type: "error"});
                 return;
@@ -212,6 +212,9 @@ async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, 
 
     if(rpcHostString.includes('"')){
         rpcHostString = rpcHostString.split('"')[0]
+    }
+    if(rpcHostString.includes('{')){
+        rpcHostString = rpcHostString.split('{')[0]
     }
 
     return {
