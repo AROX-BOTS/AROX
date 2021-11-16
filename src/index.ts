@@ -4,6 +4,7 @@ import {StartTasks} from './utils/taskInitializer';
 import * as readline from 'readline';
 import {ConfigLoader} from "./utils/configLoader";
 import {AuthenticateUser} from "./utils/authenticationHandler";
+import {sleep} from "./utils/candyMachineUtilities";
 
 
 /*
@@ -18,6 +19,12 @@ const configFolder = path.join(appdataPath, 'SAB');
 // @ts-ignore
 const walletFolder = path.join(appdataPath, 'SAB', 'Wallets');
 
+// @ts-ignore
+const configFile = path.join(appdataPath, 'SAB', 'Config.json');
+
+// @ts-ignore
+const taskFile = path.join(appdataPath, 'SAB', 'Tasks.csv');
+
 if (!fs.existsSync(configFolder)){
     fs.mkdirSync(configFolder);
 }
@@ -26,10 +33,23 @@ if (!fs.existsSync(walletFolder)){
     fs.mkdirSync(walletFolder);
 }
 
+if (!fs.existsSync(configFile)){
+    fs.writeFileSync(configFile,'{\n' +
+        '  "licenseKey": "",\n' +
+        '  "webhookUrl": ""\n' +
+        '}\n');
+}
+
+if (!fs.existsSync(taskFile)){
+    fs.writeFileSync(taskFile,'"TYPE","URL","PARSE_TYPE","WALLET","TO_MINT","CMCONFIG","CMID","CMTREASURY","CMSTART","CMNETWORK","CMRPC"');
+}
+
 const initializationSteps = async (): Promise<void> => {
     await ConfigLoader();
     const validKey = await AuthenticateUser();
     if(!validKey){
+        console.log("Your licensekey isn't valid. Please make sure that you have added the correct one to Config.json");
+        await sleep(5000);
         process.exit(1);
     }
 }
