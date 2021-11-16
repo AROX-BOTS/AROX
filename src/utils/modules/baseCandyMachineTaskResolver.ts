@@ -58,9 +58,9 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
     }
 
     let currentDate = new Date();
-    while(currentDate < goLiveDate){
+    while(currentDate <= goLiveDate){
         log({taskId: taskId, message: "Sale not live, sleeping 500ms and checking again", type: "info"});
-        await sleep(250);
+        await sleep(500);
         currentDate = new Date();
     }
 
@@ -77,6 +77,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                     treasuryPublicKey
                 );
 
+                log({taskId: taskId, message: "Finalised mint, awaiting transaction confirmation", type: "info"});
                 const status = await awaitTransactionSignatureConfirmation(
                     mintTxId,
                     txTimeout,

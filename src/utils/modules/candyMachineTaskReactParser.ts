@@ -12,7 +12,26 @@ export async function ReactParseRunner(taskId: number, wallet: anchor.Wallet, mi
         log({taskId: taskId, message: "Cannot find sitekeys, must be found manually", type: "error"});
         return;
     }
-    await CandyMachineResolve(taskId, wallet, mintUrl, mintAmount, siteKeys?.rpcHostString, siteKeys?.candyMachineConfigString, siteKeys?.candyMachineIdString, siteKeys?.candyMachineStartDateString, siteKeys?.candyMachineNetworkNameString, siteKeys?.candyMachineTreasuryString);
+    try{
+        await CandyMachineResolve(taskId, wallet, mintUrl, mintAmount, siteKeys?.rpcHostString, siteKeys?.candyMachineConfigString, siteKeys?.candyMachineIdString, siteKeys?.candyMachineStartDateString, siteKeys?.candyMachineNetworkNameString, siteKeys?.candyMachineTreasuryString);
+    } catch (error: any) {
+        let message = error.msg || "Minting failed! Please try again!";
+        if (!error.msg) {
+            if (error.message.indexOf("0x138")) {
+            } else if (error.message.indexOf("0x137")) {
+                message = `SOLD OUT!`;
+            } else if (error.message.indexOf("0x135")) {
+                message = `Insufficient funds to mint. Please fund your wallet.`;
+            }
+        } else {
+            if (error.code === 311) {
+                message = `SOLD OUT!`;
+            } else if (error.code === 312) {
+                message = `Minting period hasn't started yet.`;
+            }
+        }
+        log({taskId: taskId, message: message, type: "error"});
+    }
 }
 
 async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, parseType: string) {
