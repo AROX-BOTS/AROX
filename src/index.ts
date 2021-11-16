@@ -72,11 +72,33 @@ const startUpSelections = async (): Promise<void>  => {
                     break;
                 case 'i':
                     console.log(configFolder);
+                    await sleep(5000);
                     break;
                 default:
                     console.log('Invalid answer!');
             }
             rl.close();
+        });
+        rl.on("close", async function reRun() {
+            console.clear();
+            console.log(
+                "1: Run tasks \n" +
+                "i: File directory \n"
+            )
+            rl.question('Selection:', async (answer) => {
+                switch (answer.toLowerCase()) {
+                    case '1':
+                        await StartTasks();
+                        break;
+                    case 'i':
+                        console.log(configFolder);
+                        await sleep(5000);
+                        break;
+                    default:
+                        console.log('Invalid answer!');
+                }
+                rl.close();
+            });
         });
     });
 }
