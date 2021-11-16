@@ -80,7 +80,7 @@ const startUpSelections = async (): Promise<void>  => {
             rl.close();
         });
         rl.on("close", async function reRun() {
-            console.clear();
+            //console.clear();
             console.log(
                 "1: Run tasks \n" +
                 "i: File directory \n"

@@ -64,8 +64,7 @@ export const StartTasks = async(): Promise<void> => {
 
         await new Promise(async (resolve, reject) => {
             // @ts-ignore
-            await Promise.allSettled(tasks).then();
-            return resolve;
+            await Promise.allSettled(tasks).then(resolve());
             }
         );
 
