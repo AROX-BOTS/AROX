@@ -5,8 +5,9 @@ import * as readline from 'readline';
 import {ConfigLoader} from "./utils/configLoader";
 import {AuthenticateUser} from "./utils/authenticationHandler";
 import {sleep} from "./utils/candyMachineUtilities";
+import * as figlet from 'figlet';
 
-
+const version = "BETA 0.12"
 /*
 Notes:
 Hele starten er IKKE async, da vi gerne vil tjekke om tingene eksisterer og om licens etc. er valid før vi kører resten af programmet
@@ -59,8 +60,18 @@ const startUpSelections = async (): Promise<void>  => {
         input: process.stdin,
         output: process.stdout
     });
+    console.clear();
+    figlet.default('SAB', function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data)
+        console.log(version)
+    });
+    await sleep(250);
     await new Promise(async (resolve, reject) => {
-        console.clear();
         console.log(
             "1: Run tasks \n" +
             "i: File directory \n"
