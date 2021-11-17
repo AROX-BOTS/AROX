@@ -4,10 +4,9 @@ import got from "got";
 import {log} from './sharedTaskFunctions';
 
 
-export async function ReactParseRunner(taskId: number, wallet: anchor.Wallet, mintUrl: string, mintAmount: number, parseType: string | undefined){
-    if(parseType == undefined) parseType = "1";
+export async function ReactParseRunner(taskId: number, wallet: anchor.Wallet, mintUrl: string, mintAmount: number){
     log({taskId: taskId, message: "Starting parsing of sitekeys", type: "info"});
-    const siteKeys = await getSiteAndParseKeys(taskId, mintUrl, parseType);
+    const siteKeys = await getSiteAndParseKeys(taskId, mintUrl);
     if(siteKeys== undefined){
         log({taskId: taskId, message: "Cannot find sitekeys, must be found manually", type: "error"});
         return;
@@ -34,7 +33,7 @@ export async function ReactParseRunner(taskId: number, wallet: anchor.Wallet, mi
     }
 }
 
-async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, parseType: string) {
+async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined) {
     const httpheaders = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'accept-language': 'en-DK,en;q=0.9,da-DK;q=0.8,da;q=0.7,en-US;q=0.6',
@@ -86,135 +85,68 @@ async function getSiteAndParseKeys(taskId: number, baseUrl: string | undefined, 
         return;
     }
     const chunkSiteBody = chunkSite.body;
-    let rpcHostRegexObject;
-    let candyMachineConfigRegexObject;
-    let candyMachineIdRegexObject;
-    let candyMachineStartDateRegexObject;
-    let candyMachineNetworkNameRegexObject;
-    let candyMachineTreasuryRegexObject;
 
-    let rpcHostStringObject;
-    let candyMachineConfigStringObject;
-    let candyMachineIdStringObject;
-    let candyMachineStartDateStringObject;
-    let candyMachineNetworkNameStringObject;
-    let candyMachineTreasuryStringObject;
-    switch(parseType){
-        case "1":{
-            const regexPattern = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}",REACT_APP_CANDY_MACHINE_ID:".{1,50}",REACT_APP_TREASURY_ADDRESS:".{1,50}",REACT_APP_CANDY_START_DATE:"\d*",REACT_APP_SOLANA_NETWORK:".{1,50}",REACT_APP_SOLANA_RPC_HOST:".{1,150}"}/
-            const reactOptionsRegex = regexPattern.exec(chunkSiteBody);
-            if(reactOptionsRegex == null){ log({taskId: taskId, message: "Cannot parse site with this parse setting", type: "error"}); return;}
-            const reactOptions = reactOptionsRegex[0];
-            rpcHostRegexObject = /REACT_APP_SOLANA_RPC_HOST:".{1,150}"/.exec(reactOptions);
-            candyMachineConfigRegexObject = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}",/.exec(reactOptions);
-            candyMachineIdRegexObject = /REACT_APP_CANDY_MACHINE_ID:".{1,50}",/.exec(reactOptions);
-            candyMachineStartDateRegexObject = /REACT_APP_CANDY_START_DATE:"\d*"/.exec(reactOptions);
-            candyMachineNetworkNameRegexObject = /REACT_APP_SOLANA_NETWORK:".{1,50}",/.exec(reactOptions);
-            candyMachineTreasuryRegexObject = /REACT_APP_TREASURY_ADDRESS:".{1,50}"/.exec(reactOptions);
-            break;
-        }
-        case "2":{
-            const regexPattern = /REACT_APP_SOLANA_RPC_HOST:".{1,50}",REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}",REACT_APP_CANDY_MACHINE_ID:".{1,50}",REACT_APP_CANDY_START_DATE:"\d*",REACT_APP_SOLANA_NETWORK:".{1,50}",REACT_APP_TREASURY_ADDRESS:".{1,50}"}\)/;
-            const reactOptionsRegex = regexPattern.exec(chunkSiteBody);
-            if(reactOptionsRegex == null){ log({taskId: taskId, message: "Cannot parse site with this parse setting", type: "error"}); return;}
-            const reactOptions = reactOptionsRegex[0];
-            rpcHostRegexObject = /REACT_APP_SOLANA_RPC_HOST:".{1,50}",/.exec(reactOptions);
-            candyMachineConfigRegexObject = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}",/.exec(reactOptions);
-            candyMachineIdRegexObject = /REACT_APP_CANDY_MACHINE_ID:".{1,50}",/.exec(reactOptions);
-            candyMachineStartDateRegexObject = /REACT_APP_CANDY_START_DATE:"\d*"/.exec(reactOptions);
-            candyMachineNetworkNameRegexObject = /REACT_APP_SOLANA_NETWORK:".{1,50}",/.exec(reactOptions);
-            candyMachineTreasuryRegexObject = /REACT_APP_TREASURY_ADDRESS:".{1,50}"/.exec(reactOptions);
-            break;
-        }
-        case "3":{
-            const rpcRegex = /REACT_APP_SOLANA_RPC_HOST:".{1,150}"/.exec(chunkSiteBody);
-            if (!rpcRegex) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (1)", type: "error"});
-                return;
-            }
-            rpcHostStringObject = rpcRegex[0];
-            const cmConfigRegex = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}"/.exec(chunkSiteBody);
-            if (!cmConfigRegex) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (2)", type: "error"});
-                return;
-            }
-            candyMachineConfigStringObject = cmConfigRegex[0];
-            const cmIdRegex = /REACT_APP_CANDY_MACHINE_ID:".{1,50}"/.exec(chunkSiteBody);
-            if (!cmIdRegex) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (3)", type: "error"});
-                return;
-            }
-            candyMachineIdStringObject = cmIdRegex[0];
-            const cmStartDate = /REACT_APP_CANDY_START_DATE:"\d*"/.exec(chunkSiteBody);
-            if (!cmStartDate) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (4)", type: "error"});
-                return;
-            }
-            candyMachineStartDateStringObject = cmStartDate[0];
-            const treasuryRegex = /REACT_APP_TREASURY_ADDRESS:".{1,50}"/.exec(chunkSiteBody);
-            if (!treasuryRegex) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (5)", type: "error"});
-                return;
-            }
-            candyMachineTreasuryStringObject = treasuryRegex[0];
-            const candyMachineNetworkNameRegex = /REACT_APP_SOLANA_NETWORK:".{1,20}"/.exec(chunkSiteBody);
-            if (!candyMachineNetworkNameRegex) {
-                log({taskId: taskId, message: "Cannot parse site with this parse setting (6)", type: "error"});
-                return;
-            }
-            candyMachineNetworkNameStringObject = candyMachineNetworkNameRegex[0];
-        }
+    const rpcRegex = /REACT_APP_SOLANA_RPC_HOST:"(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:\/~\+#]*[\w\-\@?^=%&amp;\/~\+#])?"/.exec(chunkSiteBody);
+    if (!rpcRegex) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (1)", type: "error"});
+        return;
     }
-    if(parseType == "3"){
-        if(rpcHostStringObject == null || candyMachineConfigStringObject == null || candyMachineIdStringObject == null || candyMachineStartDateStringObject == null || candyMachineNetworkNameStringObject == null || candyMachineTreasuryStringObject == null){
-            log({taskId: taskId, message: "Cannot find sitekeys, must be found manually", type: "error"});
-            return;
-        }
-    } else {
-        if(rpcHostRegexObject == null || candyMachineConfigRegexObject == null || candyMachineIdRegexObject == null || candyMachineStartDateRegexObject == null || candyMachineNetworkNameRegexObject == null || candyMachineTreasuryRegexObject == null){
-            log({taskId: taskId, message: "Cannot find sitekeys, must be found manually", type: "error"});
-            return;
-        }
+    const rpcHostStringObject = rpcRegex[0];
+    const cmConfigRegex = /REACT_APP_CANDY_MACHINE_CONFIG:".{1,50}"/.exec(chunkSiteBody);
+    if (!cmConfigRegex) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (2)", type: "error"});
+        return;
     }
+    const candyMachineConfigStringObject = cmConfigRegex[0];
+    const cmIdRegex = /REACT_APP_CANDY_MACHINE_ID:".{1,50}"/.exec(chunkSiteBody);
+    if (!cmIdRegex) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (3)", type: "error"});
+        return;
+    }
+    const candyMachineIdStringObject = cmIdRegex[0];
+    const cmStartDate = /REACT_APP_CANDY_START_DATE:"\d*"/.exec(chunkSiteBody);
+    if (!cmStartDate) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (4)", type: "error"});
+        return;
+    }
+    const candyMachineStartDateStringObject = cmStartDate[0];
+    const treasuryRegex = /REACT_APP_TREASURY_ADDRESS:".{1,50}"/.exec(chunkSiteBody);
+    if (!treasuryRegex) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (5)", type: "error"});
+        return;
+    }
+    const candyMachineTreasuryStringObject = treasuryRegex[0];
+    const candyMachineNetworkNameRegex = /REACT_APP_SOLANA_NETWORK:".{1,20}"/.exec(chunkSiteBody);
+    if (!candyMachineNetworkNameRegex) {
+        log({taskId: taskId, message: "Cannot parse site with this parse setting (6)", type: "error"});
+        return;
+    }
+    const candyMachineNetworkNameStringObject = candyMachineNetworkNameRegex[0];
+
+    if(rpcHostStringObject == null || candyMachineConfigStringObject == null || candyMachineIdStringObject == null || candyMachineStartDateStringObject == null || candyMachineNetworkNameStringObject == null || candyMachineTreasuryStringObject == null){
+        log({taskId: taskId, message: "Cannot find sitekeys, must be found manually", type: "error"});
+        return;
+    }
+
     let rpcHostString;
-    let candyMachineConfigString;
-    let candyMachineIdString;
-    let candyMachineStartDateString;
-    let candyMachineNetworkNameString;
-    let candyMachineTreasuryString;
-    if(parseType == "3"){
         // @ts-ignore
-        rpcHostString = rpcHostStringObject.replace("REACT_APP_SOLANA_RPC_HOST:","").replace(",","").slice(1, -1);
+    rpcHostString = rpcHostStringObject.replace("REACT_APP_SOLANA_RPC_HOST:","").replace(",","").slice(1, -1);
         // @ts-ignore
-        candyMachineConfigString = candyMachineConfigStringObject.replace("REACT_APP_CANDY_MACHINE_CONFIG:","").replace(",","").slice(1, -1);
+    const candyMachineConfigString = candyMachineConfigStringObject.replace("REACT_APP_CANDY_MACHINE_CONFIG:","").replace(",","").slice(1, -1);
         // @ts-ignore
-        candyMachineIdString = candyMachineIdStringObject.replace("REACT_APP_CANDY_MACHINE_ID:","").replace(",","").slice(1, -1);
+    const candyMachineIdString = candyMachineIdStringObject.replace("REACT_APP_CANDY_MACHINE_ID:","").replace(",","").slice(1, -1);
         // @ts-ignore
-        candyMachineStartDateString = candyMachineStartDateStringObject.replace("REACT_APP_CANDY_START_DATE:","").replace(",","").slice(1, -1);
+    const candyMachineStartDateString = candyMachineStartDateStringObject.replace("REACT_APP_CANDY_START_DATE:","").replace(",","").slice(1, -1);
         // @ts-ignore
-        candyMachineNetworkNameString = candyMachineNetworkNameStringObject.replace("REACT_APP_SOLANA_NETWORK:","").replace(",","").slice(1, -1);
+    const candyMachineNetworkNameString = candyMachineNetworkNameStringObject.replace("REACT_APP_SOLANA_NETWORK:","").replace(",","").slice(1, -1);
         // @ts-ignore
-        candyMachineTreasuryString = candyMachineTreasuryStringObject.replace("REACT_APP_TREASURY_ADDRESS:","").replace(",","").slice(1, -1);
-    } else{
-        // @ts-ignore
-        rpcHostString =  rpcHostRegexObject[0].replace("REACT_APP_SOLANA_RPC_HOST:","").replace(",","").slice(1, -1);
-        // @ts-ignore
-        candyMachineConfigString =  candyMachineConfigRegexObject[0].replace("REACT_APP_CANDY_MACHINE_CONFIG:","").replace(",","").slice(1, -1);
-        // @ts-ignore
-        candyMachineIdString = candyMachineIdRegexObject[0].replace("REACT_APP_CANDY_MACHINE_ID:","").replace(",","").slice(1, -1);
-        // @ts-ignore
-        candyMachineStartDateString = candyMachineStartDateRegexObject[0].replace("REACT_APP_CANDY_START_DATE:","").replace(",","").slice(1, -1);
-        // @ts-ignore
-        candyMachineNetworkNameString = candyMachineNetworkNameRegexObject[0].replace("REACT_APP_SOLANA_NETWORK:","").replace(",","").slice(1, -1);
-        // @ts-ignore
-        candyMachineTreasuryString = candyMachineTreasuryRegexObject[0].replace("REACT_APP_TREASURY_ADDRESS:","").replace(",","").slice(1, -1);
-    }
+    const candyMachineTreasuryString = candyMachineTreasuryStringObject.replace("REACT_APP_TREASURY_ADDRESS:","").replace(",","").slice(1, -1);
 
     if(rpcHostString.includes('"')){
         rpcHostString = rpcHostString.split('"')[0]
     }
-    if(rpcHostString.includes('{')){
-        rpcHostString = rpcHostString.split('{')[0]
+    if(rpcHostString.includes('}')){
+        rpcHostString = rpcHostString.split('}')[0]
     }
 
     return {
