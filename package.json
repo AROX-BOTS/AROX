@@ -17,12 +17,10 @@
     "bs58": "^4.0.1",
     "colors": "^1.4.0",
     "csv-parser": "^3.0.0",
-    "figlet": "^1.5.2",
     "got": "^11.8.2",
     "node-machine-id": "^1.1.12"
   },
   "devDependencies": {
-    "@types/figlet": "^1.5.4",
     "ts-node": "^10.4.0",
     "typescript": "^4.4.4"
   }
