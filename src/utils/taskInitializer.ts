@@ -41,7 +41,7 @@ export const StartTasks = async(): Promise<void> => {
                     return;
                 }
                 // @ts-ignore
-                tasks.push(ReactParseRunner(i, wallet, task.URL, task.TO_MINT, task.PARSE_TYPE));
+                tasks.push(ReactParseRunner(i, wallet, task.URL, task.TO_MINT));
                 i++;
                 break;
             }
