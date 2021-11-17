@@ -5,7 +5,6 @@ import * as readline from 'readline';
 import {ConfigLoader} from "./utils/configLoader";
 import {AuthenticateUser} from "./utils/authenticationHandler";
 import {sleep} from "./utils/candyMachineUtilities";
-import * as figlet from 'figlet';
 
 const version = "BETA 0.12"
 /*
@@ -61,16 +60,21 @@ const startUpSelections = async (): Promise<void>  => {
         output: process.stdout
     });
     console.clear();
-    figlet.default('SAB', function(err, data) {
-        if (err) {
-            console.log('Something went wrong...');
-            console.dir(err);
-            return;
-        }
-        console.log(data)
-        console.log(version)
-    });
-    await sleep(250);
+    const name = "        _            _                   _        \n" +
+        "       / /\\         / /\\                / /\\      \n" +
+        "      / /  \\       / /  \\              / /  \\     \n" +
+        "     / / /\\ \\__   / / /\\ \\            / / /\\ \\    \n" +
+        "    / / /\\ \\___\\ / / /\\ \\ \\          / / /\\ \\ \\   \n" +
+        "    \\ \\ \\ \\/___// / /  \\ \\ \\        / / /\\ \\_\\ \\  \n" +
+        "     \\ \\ \\     / / /___/ /\\ \\      / / /\\ \\ \\___\\ \n" +
+        " _    \\ \\ \\   / / /_____/ /\\ \\    / / /  \\ \\ \\__/ \n" +
+        "/_/\\__/ / /  / /_________/\\ \\ \\  / / /____\\_\\ \\   \n" +
+        "\\ \\/___/ /  / / /_       __\\ \\_\\/ / /__________\\  \n" +
+        " \\_____\\/   \\_\\___\\     /____/_/\\/_____________/  \n" +
+        "                                                  "
+    console.log(name);
+    console.log("VERSION: " + version);
+    await sleep(450);
     await new Promise(async (resolve, reject) => {
         console.log(
             "1: Run tasks \n" +
