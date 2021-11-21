@@ -4,6 +4,7 @@ import * as csv from 'csv-parser';
 import {ReactParseRunner} from './modules/candyMachineTaskReactParser';
 import {ManualRunner} from './modules/candyMachineTaskManual';
 import {LoadWallet} from "./walletLoader";
+import {sleep} from "./candy-machine";
 
 const appdataPath = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME : process.env.HOME + "/.local/share");
 // @ts-ignore
@@ -67,6 +68,8 @@ export const StartTasks = async(): Promise<void> => {
             await Promise.allSettled(tasks).then(resolve());
             }
         );
+
+        await sleep(1200000); //2min
 
     }
 }
