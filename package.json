@@ -18,7 +18,8 @@
     "colors": "^1.4.0",
     "csv-parser": "^3.0.0",
     "got": "^11.8.2",
-    "node-machine-id": "^1.1.12"
+    "node-machine-id": "^1.1.12",
+    "queue-promise": "^2.2.1"
   },
   "devDependencies": {
     "ts-node": "^10.4.0",
