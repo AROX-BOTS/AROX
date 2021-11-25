@@ -100,12 +100,12 @@ export const sendTransactions = async (
     const pendingTxns: Promise<{ txid: string; slot: number }>[] = [];
 
     let breakEarlyObject = { breakEarly: false, i: 0 };
-    console.log(
+  /*  console.log(
         'Signed txns length',
         signedTxns.length,
         'vs handed in length',
         instructionSet.length,
-    );
+    ); */ //todo: log til fil
 
     const txIds = []
     for (let i = 0; i < signedTxns.length; i++) {
@@ -118,7 +118,7 @@ export const sendTransactions = async (
             const { txid } = await signedTxnPromise
             txIds.push(txid)
         } catch (error) {
-            console.error(error)
+         //   console.error(error) //todo: log til fil
             // @ts-ignore
             failCallback(signedTxns[i], i);
             if (sequenceType === SequenceType.StopOnFailure) {
@@ -131,9 +131,9 @@ export const sendTransactions = async (
             try {
                 await signedTxnPromise;
             } catch (e) {
-                console.log('Caught failure', e);
+               // console.log('Caught failure', e); //todo: log til fil
                 if (breakEarlyObject.breakEarly) {
-                    console.log('Died on ', breakEarlyObject.i);
+                   // console.log('Died on ', breakEarlyObject.i); //todo: log til fil
                     return breakEarlyObject.i; // Return the txn we failed on by index
                 }
             }
@@ -291,7 +291,7 @@ export async function sendSignedTransaction({
         },
     );
 
-    console.log('Started awaiting confirmation for', txid);
+    //console.log('Started awaiting confirmation for', txid);
 
     let done = false;
     (async () => {
@@ -321,7 +321,7 @@ export async function sendSignedTransaction({
 
         slot = confirmation?.slot || 0;
     } catch (err: any) {
-        console.error('Timeout Error caught', err);
+        console.error('Timeout Error caught', err.code);
         if (err.timeout) {
             throw new Error('Timed out awaiting confirmation on transaction');
         }
@@ -337,19 +337,19 @@ export async function sendSignedTransaction({
                     const line = simulateResult.logs[i];
                     if (line.startsWith('Program log: ')) {
                         throw new Error(
-                            'Transaction failed: ' + line.slice('Program log: '.length),
+                            'Transaction failed: ' + line.slice('Program log: '.length), //todo: log til fil
                         );
                     }
                 }
             }
-            throw new Error(JSON.stringify(simulateResult.err));
+           // throw new Error(JSON.stringify(simulateResult.err)); //todo: log til fil
         }
-        // throw new Error('Transaction failed');
+        // throw new Error('Transaction failed'); //todo: log til fil
     } finally {
         done = true;
     }
 
-    console.log('Latency', txid, getUnixTs() - startTime);
+  //  console.log('Latency', txid, getUnixTs() - startTime);
     return { txid, slot };
 }
 
@@ -374,7 +374,7 @@ async function simulateTransaction(
     // @ts-ignore
     const res = await connection._rpcRequest('simulateTransaction', args);
     if (res.error) {
-        throw new Error('failed to simulate transaction: ' + res.error.message);
+        throw new Error('failed to simulate transaction: ' + res.error.message); //todo: log til fil
     }
     return res.result;
 }
@@ -416,7 +416,7 @@ async function awaitTransactionSignatureConfirmation(
                         console.log('Rejected via websocket', result.err);
                         reject(status);
                     } else {
-                        console.log('Resolved via websocket', result);
+                      //  console.log('Resolved via websocket', result);
                         resolve(status);
                     }
                 },
@@ -436,15 +436,15 @@ async function awaitTransactionSignatureConfirmation(
                     status = signatureStatuses && signatureStatuses.value[0];
                     if (!done) {
                         if (!status) {
-                            console.log('REST null result for', txid, status);
+                          //  console.log('REST null result for', txid, status);
                         } else if (status.err) {
-                            console.log('REST error for', txid, status);
+                     //       console.log('REST error for', txid, status);
                             done = true;
                             reject(status.err);
                         } else if (!status.confirmations) {
-                            console.log('REST no confirmations for', txid, status);
+                            //console.log('REST no confirmations for', txid, status);
                         } else {
-                            console.log('REST confirmation for', txid, status);
+                            //console.log('REST confirmation for', txid, status);
                             done = true;
                             resolve(status);
                         }
@@ -463,7 +463,7 @@ async function awaitTransactionSignatureConfirmation(
     if (connection._signatureSubscriptions[subId])
         connection.removeSignatureListener(subId);
     done = true;
-    console.log('Returning status', status);
+   // console.log('Returning status', status);
     return status;
 }
 export function sleep(ms: number): Promise<void> {
