@@ -6,7 +6,7 @@ import {ConfigLoader} from "./utils/configLoader";
 import {AuthenticateUser} from "./utils/authenticationHandler";
 import {sleep} from "./utils/candyMachineUtilities";
 
-const version = "BETA 0.12"
+const version = "BETA 0.13"
 /*
 Notes:
 Hele starten er IKKE async, da vi gerne vil tjekke om tingene eksisterer og om licens etc. er valid før vi kører resten af programmet

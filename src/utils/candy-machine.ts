@@ -90,15 +90,15 @@ export const awaitTransactionSignatureConfirmation = async (
           status = signatureStatuses && signatureStatuses.value[0];
           if (!done) {
             if (!status) {
-              console.log("REST null result for", txid, status);
+           //   console.log("REST null result for", txid, status);
             } else if (status.err) {
-              console.log("REST error for", txid, status);
+          //    console.log("REST error for", txid, status);
               done = true;
               reject(status.err);
             } else if (!status.confirmations) {
-              console.log("REST no confirmations for", txid, status);
+          //    console.log("REST no confirmations for", txid, status);
             } else {
-              console.log("REST confirmation for", txid, status);
+          //    console.log("REST confirmation for", txid, status);
               done = true;
               resolve(status);
             }

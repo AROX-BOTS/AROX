@@ -7,6 +7,7 @@ import {
     sleep
 } from "../candy-machine";
 import {log} from './sharedTaskFunctions';
+import {QueueWebhook} from "../webhookHandler";
 
 export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, mintUrl: string | undefined, mintAmount: number, rpcHost: string | undefined, candyMachineConfigId: string | undefined, candyMachineId: string | undefined, candyMachineStartDate: string | undefined, candyMachineNetworkName: string | undefined, candyMachineTreasuryKey: string | undefined): Promise<void> => {
     if(wallet == undefined){
@@ -51,7 +52,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
     );
     log({taskId: taskId, message: "Candy machine functions initialised", type: "success"});
     log({taskId: taskId, message: "Items remaining in machine: " + itemsRemaining + ", Live at: " + goLiveDate + ", total redeemed: " + itemsRedeemed + ", total available: " + itemsAvailable, type: "info"});
-    
+
     if(itemsRemaining == 0){
         log({taskId: taskId, message: "No items left to mint", type: "critical"});
         return;
@@ -89,6 +90,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                 // @ts-ignore
                 if(status.err === null){
                     log({taskId: taskId, message: "Finalised mint of 1 token, TX: " + mintTxId, type: "success"});
+                    await QueueWebhook(mintTxId, mintUrl, candyMachineNetworkName);
                 } else{
                     log({taskId: taskId, message: "Encountered error on minting of 1 token", type: "critical"});
                 }
@@ -103,6 +105,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                 );
 
                 const promiseArray = []
+                const txArray = [];
 
                 for (let index = 0; index < signedTransactions.length; index++) {
                     const tx = signedTransactions[index];
@@ -112,7 +115,8 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                         connection,
                         "singleGossip",
                         true
-                    ))
+                    ));
+                    txArray.push(tx);
                 }
 
                 const allTransactionsResult = await Promise.all(promiseArray) // alle de TX ID's fra mints er i signedTransactions
@@ -123,6 +127,7 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                     const transactionStatus = allTransactionsResult[index];
                     if (!transactionStatus?.err) {
                         totalSuccess += 1
+                        await QueueWebhook(txArray[index], mintUrl, candyMachineNetworkName);
                     } else {
                         totalFailure += 1
                     }
