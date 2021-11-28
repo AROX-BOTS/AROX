@@ -208,7 +208,7 @@ export const sendTransaction = async (
         if (confirmation?.err) {
             const errors = await getErrorForTransaction(connection, txid);
 
-            console.log(errors);
+           // console.log(errors);
             throw new Error(`Raw transaction ${txid} failed`);
         }
     }
@@ -311,11 +311,10 @@ export async function sendSignedTransaction({
             true,
         );
 
-        if (!confirmation)
-            throw new Error('Timed out awaiting confirmation on transaction');
+        if (!confirmation) throw new Error('Timed out awaiting confirmation on transaction');
 
         if (confirmation.err) {
-            console.error(confirmation.err);
+            //console.error(confirmation.err);
             throw new Error('Transaction failed: Custom instruction error');
         }
 
@@ -336,15 +335,14 @@ export async function sendSignedTransaction({
                 for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
                     const line = simulateResult.logs[i];
                     if (line.startsWith('Program log: ')) {
-                        throw new Error(
-                            'Transaction failed: ' + line.slice('Program log: '.length), //todo: log til fil
+                        throw new Error('Transaction failed: ' + line.slice('Program log: '.length), //todo: log til fil
                         );
                     }
                 }
             }
-           // throw new Error(JSON.stringify(simulateResult.err)); //todo: log til fil
+            throw new Error(JSON.stringify(simulateResult.err)); //todo: log til fil
         }
-        // throw new Error('Transaction failed'); //todo: log til fil
+         throw new Error('Transaction failed'); //todo: log til fil
     } finally {
         done = true;
     }
@@ -399,7 +397,7 @@ async function awaitTransactionSignatureConfirmation(
                 return;
             }
             done = true;
-            console.log('Rejecting for timeout...');
+           // console.log('Rejecting for timeout...');
             reject({ timeout: true });
         }, timeout);
         try {
@@ -413,7 +411,7 @@ async function awaitTransactionSignatureConfirmation(
                         confirmations: 0,
                     };
                     if (result.err) {
-                        console.log('Rejected via websocket', result.err);
+                     //   console.log('Rejected via websocket', result.err);
                         reject(status);
                     } else {
                       //  console.log('Resolved via websocket', result);
@@ -424,7 +422,7 @@ async function awaitTransactionSignatureConfirmation(
             );
         } catch (e) {
             done = true;
-            console.error('WS error in setup', txid, e);
+          //  console.error('WS error in setup', txid, e);
         }
         while (!done && queryStatus) {
             // eslint-disable-next-line no-loop-func
@@ -451,7 +449,7 @@ async function awaitTransactionSignatureConfirmation(
                     }
                 } catch (e) {
                     if (!done) {
-                        console.log('REST connection error: txid', txid, e);
+                       // console.log('REST connection error: txid', txid, e);
                     }
                 }
             })();

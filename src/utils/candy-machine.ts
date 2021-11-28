@@ -53,7 +53,7 @@ export const awaitTransactionSignatureConfirmation = async (
         return;
       }
       done = true;
-      console.log("Rejecting for timeout...");
+  //    console.log("Rejecting for timeout...");
       reject({ timeout: true });
     }, timeout);
     try {
@@ -67,7 +67,7 @@ export const awaitTransactionSignatureConfirmation = async (
             confirmations: 0,
           };
           if (result.err) {
-            console.log("Rejected via websocket", result.err);
+           // console.log("Rejected via websocket", result.err);
             reject(status);
           } else {
           //  console.log("Resolved via websocket", result);
@@ -78,7 +78,7 @@ export const awaitTransactionSignatureConfirmation = async (
       );
     } catch (e) {
       done = true;
-      console.error("WS error in setup", txid, e);
+ //     console.error("WS error in setup", txid, e);
     }
     while (!done && queryStatus) {
       // eslint-disable-next-line no-loop-func
@@ -105,7 +105,7 @@ export const awaitTransactionSignatureConfirmation = async (
           }
         } catch (e) {
           if (!done) {
-            console.log("REST connection error: txid", txid, e);
+         //   console.log("REST connection error: txid", txid, e);
           }
         }
       })();

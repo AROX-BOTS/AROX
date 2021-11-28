@@ -44,7 +44,7 @@ export const StartTasks = async(): Promise<void> => {
                 // @ts-ignore
                 tasks.push(ReactParseRunner(i, wallet, task.URL, task.TO_MINT));
                 i++;
-                break;
+                continue;
             }
             case "cm-manual":{
                 // @ts-ignore
@@ -55,11 +55,11 @@ export const StartTasks = async(): Promise<void> => {
                 // @ts-ignore
                 tasks.push(ManualRunner(i, wallet, task.URL, task));
                 i++;
-                break;
+                continue;
             }
             default:{
                 console.log("Not a valid selection");
-                break;
+                continue;
             }
         }
 
