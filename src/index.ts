@@ -54,28 +54,27 @@ const initializationSteps = async (): Promise<void> => {
     }
 }
 
-const startUpSelections = async (): Promise<void>  => {
+const startUpSelections = async (): Promise<boolean>  => {
     let rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
     console.clear();
-    const name = "        _            _                   _        \n" +
-        "       / /\\         / /\\                / /\\      \n" +
-        "      / /  \\       / /  \\              / /  \\     \n" +
-        "     / / /\\ \\__   / / /\\ \\            / / /\\ \\    \n" +
-        "    / / /\\ \\___\\ / / /\\ \\ \\          / / /\\ \\ \\   \n" +
-        "    \\ \\ \\ \\/___// / /  \\ \\ \\        / / /\\ \\_\\ \\  \n" +
-        "     \\ \\ \\     / / /___/ /\\ \\      / / /\\ \\ \\___\\ \n" +
-        " _    \\ \\ \\   / / /_____/ /\\ \\    / / /  \\ \\ \\__/ \n" +
-        "/_/\\__/ / /  / /_________/\\ \\ \\  / / /____\\_\\ \\   \n" +
-        "\\ \\/___/ /  / / /_       __\\ \\_\\/ / /__________\\  \n" +
-        " \\_____\\/   \\_\\___\\     /____/_/\\/_____________/  \n" +
-        "                                                  "
+    const name = "   _____        ___________             ____    _____       _____ \n" +
+        "  /      |_      \\          \\        ____\\_  \\__ \\    \\     /    / \n" +
+        " /         \\      \\    /\\    \\      /     /     \\ \\    |   |    /  \n" +
+        "|     /\\    \\      |   \\_\\    |    /     /\\      | \\    \\ /    /   \n" +
+        "|    |  |    \\     |      ___/    |     |  |     |  \\    |    /    \n" +
+        "|     \\/      \\    |      \\  ____ |     |  |     |  /    |    \\    \n" +
+        "|\\      /\\     \\  /     /\\ \\/    \\|     | /     /| /    /|\\    \\   \n" +
+        "| \\_____\\ \\_____\\/_____/ |\\______||\\     \\_____/ ||____|/ \\|____|  \n" +
+        "| |     | |     ||     | | |     || \\_____\\   | / |    |   |    |  \n" +
+        " \\|_____|\\|_____||_____|/ \\|_____| \\ |    |___|/  |____|   |____|  \n" +
+        "                                    \\|____|                        "
     console.log(name);
     console.log("VERSION: " + version);
     await sleep(450);
-    await new Promise(async (resolve, reject) => {
+    return await new Promise(async (resolve, reject) => {
         console.log(
             "1: Run tasks \n" +
             "i: File directory \n"
@@ -84,39 +83,22 @@ const startUpSelections = async (): Promise<void>  => {
             switch (answer.toLowerCase()) {
                 case '1':
                     await StartTasks();
+                    resolve(true);
                     break;
                 case 'i':
                     console.log(configFolder);
                     await sleep(5000);
+                    resolve(true);
                     break;
                 default:
                     console.log('Invalid answer!');
+                    resolve(true);
+                    break;
             }
             rl.close();
-        });
-        rl.on("close", async function reRun() {
-            //console.clear();
-            console.log(
-                "1: Run tasks \n" +
-                "i: File directory \n"
-            )
-            rl.question('Selection:', async (answer) => {
-                switch (answer.toLowerCase()) {
-                    case '1':
-                        await StartTasks();
-                        break;
-                    case 'i':
-                        console.log(configFolder);
-                        await sleep(5000);
-                        break;
-                    default:
-                        console.log('Invalid answer!');
-                }
-                rl.close();
-            });
         });
     });
 }
 
-
+let running: boolean;
 initializationSteps().then(startUpSelections);

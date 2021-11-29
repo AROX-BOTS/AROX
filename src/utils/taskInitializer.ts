@@ -44,7 +44,7 @@ export const StartTasks = async(): Promise<void> => {
                 // @ts-ignore
                 tasks.push(ReactParseRunner(i, wallet, task.URL, task.TO_MINT));
                 i++;
-                continue;
+                break;
             }
             case "cm-manual":{
                 // @ts-ignore
@@ -55,21 +55,22 @@ export const StartTasks = async(): Promise<void> => {
                 // @ts-ignore
                 tasks.push(ManualRunner(i, wallet, task.URL, task));
                 i++;
-                continue;
+                break;
             }
             default:{
                 console.log("Not a valid selection");
-                continue;
+                break;
             }
         }
 
-        await new Promise(async (resolve, reject) => {
-            // @ts-ignore
-            await Promise.allSettled(tasks).then(resolve());
-            }
-        );
-
-        await sleep(1200000); //2min
 
     }
+
+    await new Promise(async (resolve, reject) => {
+            // @ts-ignore
+            await Promise.allSettled(tasks).then(resolve());
+        }
+    );
+
+    await sleep(1200000); //2min
 }
