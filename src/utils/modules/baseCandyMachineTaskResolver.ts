@@ -45,13 +45,14 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
         itemsAvailable,
         itemsRemaining,
         itemsRedeemed,
+        price
     } =  await getCandyMachineState(
         wallet,
         candyMachinePublicId,
         connection
     );
     log({taskId: taskId, message: "Candy machine functions initialised", type: "success"});
-    log({taskId: taskId, message: "Items remaining in machine: " + itemsRemaining + ", Live at: " + goLiveDate + ", total redeemed: " + itemsRedeemed + ", total available: " + itemsAvailable, type: "info"});
+    log({taskId: taskId, message: "Items remaining in machine: " + itemsRemaining + ", Live at: " + goLiveDate + ", total redeemed: " + itemsRedeemed + ", total available: " + itemsAvailable + " price: " + price+"SOL", type: "info"});
 
     if(itemsRemaining == 0){
         log({taskId: taskId, message: "No items left to mint", type: "critical"});
