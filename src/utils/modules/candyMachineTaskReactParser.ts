@@ -26,6 +26,7 @@ export async function ReactParseRunner(taskId: number, wallet: anchor.Wallet, mi
             if (error.code === 311) {
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
+                await CandyMachineResolve(taskId, wallet, mintUrl, mintAmount, siteKeys?.rpcHostString, siteKeys?.candyMachineConfigString, siteKeys?.candyMachineIdString, siteKeys?.candyMachineStartDateString, siteKeys?.candyMachineNetworkNameString, siteKeys?.candyMachineTreasuryString);
                 message = `Minting period hasn't started yet.`;
             }
         }
