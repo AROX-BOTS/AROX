@@ -31,6 +31,7 @@ interface CandyMachineState {
   itemsRedeemed: number;
   itemsRemaining: number;
   goLiveDate: Date,
+  price: number;
 }
 
 export const awaitTransactionSignatureConfirmation = async (
@@ -176,6 +177,7 @@ export const getCandyMachineState = async (
 
   const state: any = await program.account.candyMachine.fetch(candyMachineId);
 
+  const price = state.data.price.toNumber() / 100000000;
   const itemsAvailable = state.data.itemsAvailable.toNumber();
   const itemsRedeemed = state.itemsRedeemed.toNumber();
   const itemsRemaining = itemsAvailable - itemsRedeemed;
@@ -196,6 +198,7 @@ export const getCandyMachineState = async (
     itemsRedeemed,
     itemsRemaining,
     goLiveDate,
+    price
   };
 }
 
