@@ -157,7 +157,25 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
             if (error.code === 311) {
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
-                message = `Minting period hasn't started yet.`;
+                try{
+                    await CandyMachineResolve(taskId, wallet, mintUrl, mintAmount, rpcHost, candyMachineConfigId, candyMachineId, candyMachineStartDate, candyMachineNetworkName, candyMachineTreasuryKey);
+                } catch(error: any){
+                    if (!error.msg) {
+                        if (error.message.indexOf("0x138")) {
+                        } else if (error.message.indexOf("0x137")) {
+                            message = `SOLD OUT!`;
+                        } else if (error.message.indexOf("0x135")) {
+                            message = `Insufficient funds to mint. Please fund your wallet.`;
+                        }
+                    } else {
+                        if (error.code === 311) {
+                            message = `SOLD OUT!`;
+                        } else if (error.code === 312) {
+                            await CandyMachineResolve(taskId, wallet, mintUrl, mintAmount, rpcHost, candyMachineConfigId, candyMachineId, candyMachineStartDate, candyMachineNetworkName, candyMachineTreasuryKey);}
+                            // message = `Minting period hasn't started yet.`;
+                        }
+                }
+               // message = `Minting period hasn't started yet.`;
             }
         }
         log({taskId: taskId, message: message, type: "error"});
