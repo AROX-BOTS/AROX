@@ -8,6 +8,7 @@ import {
 } from "../candy-machine";
 import {log} from './sharedTaskFunctions';
 import {QueueWebhook} from "../webhookHandler";
+import {QueueMintStatusLog} from "../mintStatusLogger";
 
 export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, mintUrl: string | undefined, mintAmount: number, rpcHost: string | undefined, candyMachineConfigId: string | undefined, candyMachineId: string | undefined, candyMachineStartDate: string | undefined, candyMachineNetworkName: string | undefined, candyMachineTreasuryKey: string | undefined): Promise<void> => {
     if(wallet == undefined){
@@ -92,8 +93,10 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                 if(status.err === null){
                     log({taskId: taskId, message: "Finalised mint of 1 token, TX: " + mintTxId, type: "success"});
                     await QueueWebhook(mintTxId, mintUrl, candyMachineNetworkName);
+                    await QueueMintStatusLog(mintUrl, true);
                 } else{
                     log({taskId: taskId, message: "Encountered error on minting of 1 token", type: "critical"});
+                    await QueueMintStatusLog(mintUrl, false);
                 }
             } else{
 
@@ -129,8 +132,10 @@ export const CandyMachineResolve = async(taskId: number, wallet: anchor.Wallet, 
                     if (!transactionStatus?.err) {
                         totalSuccess += 1
                         await QueueWebhook(txArray[index], mintUrl, candyMachineNetworkName);
+                        await QueueMintStatusLog(mintUrl, true);
                     } else {
                         totalFailure += 1
+                        await QueueMintStatusLog(mintUrl, false);
                     }
                 }
 

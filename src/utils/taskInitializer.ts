@@ -72,5 +72,5 @@ export const StartTasks = async(): Promise<void> => {
         }
     );
 
-    await sleep(1200000); //2min
+    await sleep(120000); //2min
 }
