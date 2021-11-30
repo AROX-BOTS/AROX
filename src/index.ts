@@ -5,8 +5,10 @@ import * as readline from 'readline';
 import {ConfigLoader} from "./utils/configLoader";
 import {AuthenticateUser} from "./utils/authenticationHandler";
 import {sleep} from "./utils/candyMachineUtilities";
+import {VersionChecker} from "./utils/versionChecker";
+import {log} from "./utils/modules/sharedTaskFunctions";
 
-const version = "BETA 0.13"
+export const version = "BETA 0.15"
 /*
 Notes:
 Hele starten er IKKE async, da vi gerne vil tjekke om tingene eksisterer og om licens etc. er valid før vi kører resten af programmet
@@ -51,6 +53,11 @@ const initializationSteps = async (): Promise<void> => {
         console.log("Your licensekey isn't valid. Please make sure that you have added the correct one to Config.json");
         await sleep(5000);
         process.exit(1);
+    }
+    const getVersion = await VersionChecker();
+    if(!getVersion){
+        log({taskId: 0, message:"Your version is: " + version + ", which may not be the newest version. Please check the Discord", type: "info"});
+        await sleep(5000);
     }
 }
 
