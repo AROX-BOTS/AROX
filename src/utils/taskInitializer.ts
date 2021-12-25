@@ -6,6 +6,7 @@ import {ManualRunner} from './modules/candyMachineTaskManual';
 import {LoadWallet} from "./walletLoader";
 import {sleep} from "./candy-machine";
 import {ManualRunnerV2} from "./modules/cmV2ManualTask";
+import {Cmv2ReactParseRunner} from "./modules/cmV2ReactParsing";
 
 const appdataPath = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME : process.env.HOME + "/.local/share");
 // @ts-ignore
@@ -66,6 +67,17 @@ export const StartTasks = async(): Promise<void> => {
                 }
                 // @ts-ignore
                 tasks.push(ManualRunnerV2(i, wallet, task.URL, task));
+                i++;
+                break;
+            }
+            case "cmv2-react-parse":{
+                //@ts-ignore
+                let wallet = await LoadWallet(task.WALLET)
+                if(wallet == undefined){
+                    return;
+                }
+                // @ts-ignore
+                tasks.push(Cmv2ReactParseRunner(i, wallet, task.URL));
                 i++;
                 break;
             }

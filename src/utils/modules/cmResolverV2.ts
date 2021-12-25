@@ -9,7 +9,7 @@ import {log} from './sharedTaskFunctions';
 import {QueueWebhook} from "../webhookHandler";
 import {QueueMintStatusLog} from "../mintStatusLogger";
 
-export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined): Promise<void> => {
+export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, mintUrl: string | undefined): Promise<void> => {
     if(wallet == undefined){
         log({taskId: taskId, message: "Wallet is undefined", type: "error"});
         return;
@@ -22,7 +22,14 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     }
 
     let connection;
-    connection = new anchor.web3.Connection(rpcNetworkHost);
+    if(mintUrl != undefined){
+        const web3Config: anchor.web3.ConnectionConfig = {
+            httpHeaders: {origin: mintUrl, referer: mintUrl}
+        };
+        connection = new anchor.web3.Connection(rpcNetworkHost, web3Config);
+    } else{
+        connection = new anchor.web3.Connection(rpcNetworkHost);
+    }
 
     //const txTimeout = 30000; // milliseconds (confirm this works for your project)'
 
@@ -102,7 +109,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
                 try{
-                    await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId);
+                    await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, undefined);
                 } catch(error: any){
                     if (!error.msg) {
                         if (error.message.indexOf("0x138")) {
@@ -115,7 +122,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
                         if (error.code === 311) {
                             message = `SOLD OUT!`;
                         } else if (error.code === 312) {
-                            await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId);}
+                            await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, undefined);}
                         // message = `Minting period hasn't started yet.`;
                     }
                 }
