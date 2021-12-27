@@ -51,10 +51,12 @@ const sendTxWebhook = async(txId: String, site: String, rpcName: String): Promis
                     statCode = statusCode;
                 } catch (e) {
                     if (e instanceof got.HTTPError) {
-                        const {statusCode} = await got.post(WebhookUrl, {json: webhookObject});
-                        await sleep(200);
-                        await sleep(200);
-                        statCode = statusCode;
+                        try{
+                            const {statusCode} = await got.post(WebhookUrl, {json: webhookObject});
+                            await sleep(200);
+                            await sleep(200);
+                            statCode = statusCode;
+                        } catch(e){} //suppress
                     }
                 }
             }
