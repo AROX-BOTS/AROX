@@ -9,7 +9,7 @@ import {log} from './sharedTaskFunctions';
 import {QueueWebhook} from "../webhookHandler";
 import {QueueMintStatusLog} from "../mintStatusLogger";
 
-export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, mintUrl: string | undefined): Promise<void> => {
+export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, mintUrl: string | undefined, customStart: number | undefined): Promise<void> => {
     if(wallet == undefined){
         log({taskId: taskId, message: "Wallet is undefined", type: "error"});
         return;
@@ -55,10 +55,19 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     }
 
     let currentDate = new Date();
-    while(currentDate.valueOf() <= candyMachineState.state.goLiveDate.toNumber()){
-        log({taskId: taskId, message: "Sale not live, sleeping 500ms and checking again", type: "info"});
-        await sleep(500);
-        currentDate = new Date();
+    if(customStart != undefined){
+        log({taskId: taskId, message: "Using custom start date...", type: "info"});
+        while(currentDate.valueOf() <= customStart){
+            log({taskId: taskId, message: "Haven't reached custom start date, sleeping 500ms and checking again. Current time: " + currentDate.valueOf(), type: "info"});
+            await sleep(500);
+            currentDate = new Date();
+        }
+    } else {
+        while(currentDate.valueOf() <= candyMachineState.state.goLiveDate.toNumber()){
+            log({taskId: taskId, message: "Sale not live, sleeping 500ms and checking again", type: "info"});
+            await sleep(500);
+            currentDate = new Date();
+        }
     }
 
     log({taskId: taskId, message: "Sale live, trying to mint...", type: "info"});
@@ -109,7 +118,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
                 try{
-                    await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, undefined);
+                    await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, undefined, customStart);
                 } catch(error: any){
                     if (!error.msg) {
                         if (error.message.indexOf("0x138")) {
@@ -122,7 +131,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
                         if (error.code === 311) {
                             message = `SOLD OUT!`;
                         } else if (error.code === 312) {
-                            await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, undefined);}
+                            await CandyMachineResolveV2(taskId, wallet, rpcHost, candyMachineId, mintUrl, customStart);}
                         // message = `Minting period hasn't started yet.`;
                     }
                 }

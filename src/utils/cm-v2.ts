@@ -163,6 +163,11 @@ export const getCandyMachineState = async (
     // @ts-ignore
     const program = new anchor.Program(idl, CANDY_MACHINE_PROGRAM, provider);
 
+    try{
+        const state: any = await program.account.candyMachine.fetch(candyMachineId);
+    } catch(e){
+        console.log(e);
+    }
     const state: any = await program.account.candyMachine.fetch(candyMachineId);
     const itemsAvailable = state.data.itemsAvailable.toNumber();
     const itemsRedeemed = state.itemsRedeemed.toNumber();
