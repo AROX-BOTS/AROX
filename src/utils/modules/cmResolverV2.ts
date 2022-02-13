@@ -15,21 +15,11 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
         return;
     }
 
-    let rpcNetworkHost = rpcHost;
-    if(rpcNetworkHost == null || rpcNetworkHost == ""){
-        log({taskId: taskId, message: "RPC is null, setting to mainnet-beta", type: "error"});
-        rpcNetworkHost = "https://solana-api.projectserum.com";
-    }
 
-    let connection;
-    if(mintUrl != undefined){
-        const web3Config: anchor.web3.ConnectionConfig = {
-            httpHeaders: {origin: mintUrl, referer: mintUrl}
-        };
-        connection = new anchor.web3.Connection(rpcNetworkHost, web3Config);
-    } else{
-        connection = new anchor.web3.Connection(rpcNetworkHost);
-    }
+    const web3Config: anchor.web3.ConnectionConfig = {
+        httpHeaders: {origin: "https://aroxbots.com", referer: "https://aroxbots.com"}
+    };
+    const connection = new anchor.web3.Connection("https://dry-falling-water.solana-mainnet.quiknode.pro/059cac57150dbd31b529745ae4333bc0414aa7bc/", web3Config); //https://ssc-dao.genesysgo.net/
 
     //const txTimeout = 30000; // milliseconds (confirm this works for your project)'
 

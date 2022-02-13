@@ -18,3 +18,7 @@ export function log(status: { taskId: number | undefined; message: string; type:
     }
     console.log(message);
 }
+
+export const sleep = (ms: number): Promise<void> => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

@@ -1,4 +1,4 @@
-import got from "got";
+import axios from "axios";
 import {LicenseKey} from "./configLoader";
 import {machineId} from 'node-machine-id';
 import {sleep} from "./candy-machine";
@@ -15,34 +15,15 @@ export const AuthenticateUser = async(): Promise<boolean> => {
                 'user-agent': 'SAB',
                 'accept': '*/*'
             };
-            const {statusCode} = await got.post("https://sab-api.ey.r.appspot.com/api/handle-hardware-id", {json: {
+            const resp = await axios.post("https://sab-api.ey.r.appspot.com/api/handle-hardware-id", {
                     licensekey: LicenseKey,
                     hardwareId: hwid
-                }, headers: httpHeaders});
+                }, {headers: httpHeaders});
             await sleep(750);
             await sleep(750);
-            statCode = statusCode;
+            statCode = resp.status;
         } catch(e){
-            if (e instanceof got.HTTPError) {
-                try{
-                    const httpHeaders = {
-                        'user-agent': 'SAB',
-                        'accept': '*/*'
-                    };
-                    const {statusCode} = await got.post("https://sab-api.ey.r.appspot.com/api/handle-hardware-id", {json: {
-                            licensekey: LicenseKey,
-                            hardwareId: hwid
-                        }, headers: httpHeaders});
-                    await sleep(750);
-                    await sleep(750);
-                    statCode = statusCode;
-                } catch(e){
-                    if (e instanceof got.HTTPError) {
-                        validKey = false;
-                        resolve(validKey);
-                    }
-                }
-            }
+            console.log(e);
         }
         if(statCode !== 200){
             validKey = false;

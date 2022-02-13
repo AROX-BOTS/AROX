@@ -263,10 +263,7 @@ export const mintOneToken = async (
             fromPubkey: payer,
             newAccountPubkey: mint.publicKey,
             space: MintLayout.span,
-            lamports:
-                await candyMachine.program.provider.connection.getMinimumBalanceForRentExemption(
-                    MintLayout.span,
-                ),
+            lamports: await candyMachine.program.provider.connection.getMinimumBalanceForRentExemption(MintLayout.span,),
             programId: TOKEN_PROGRAM_ID,
         }),
         Token.createInitMintInstruction(
