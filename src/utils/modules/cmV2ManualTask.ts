@@ -9,5 +9,5 @@ export async function ManualRunnerV2(taskId: number, wallet: anchor.Wallet, mint
         url = mintUrl;
     }
     // @ts-ignore
-    await CandyMachineResolveV2(taskId, wallet, keys.CMRPC, keys.CMID, url, keys.CMSTART);
+    await CandyMachineResolveV2(taskId, wallet, keys.CUSTOMRPC, keys.CMID, url, keys.CUSTOMSTART, keys.CUSTOMRPC, keys.RETRYDELAY);
 }

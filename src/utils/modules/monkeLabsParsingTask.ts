@@ -4,7 +4,7 @@ import {log} from "./sharedTaskFunctions";
 import {BaseMonkeLabsHandler} from "./baseMonkeLabsHandler";
 
 
-export async function MonkeLabsParseRunner(taskId: number, wallet: anchor.Wallet, mintUrl: string){
+export async function MonkeLabsParseRunner(taskId: number, wallet: anchor.Wallet, mintUrl: string, customCmStart: number | undefined, customRpc: string | undefined, retryDelay: string | undefined){
     log({taskId: taskId, message: "Starting parsing of sitekeys", type: "info"});
     const siteKeys = await getSiteAndParseKeys(taskId, mintUrl);
     if(siteKeys== undefined){
@@ -12,7 +12,7 @@ export async function MonkeLabsParseRunner(taskId: number, wallet: anchor.Wallet
         return;
     }
     try{
-        await BaseMonkeLabsHandler(taskId, wallet, siteKeys.candyMachineIdString, siteKeys.config);
+        await BaseMonkeLabsHandler(taskId, wallet, siteKeys.candyMachineIdString, siteKeys.config, customCmStart, customRpc, retryDelay);
     } catch (error: any) {
         let message = error.msg || "Minting failed! Please try again!";
         if (!error.msg) {
@@ -26,7 +26,7 @@ export async function MonkeLabsParseRunner(taskId: number, wallet: anchor.Wallet
             if (error.code === 311) {
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
-                await BaseMonkeLabsHandler(taskId, wallet, siteKeys.candyMachineIdString, siteKeys.config);
+                await BaseMonkeLabsHandler(taskId, wallet, siteKeys.candyMachineIdString, siteKeys.config, customCmStart, customRpc, retryDelay);
                 message = `Minting period hasn't started yet.`;
             }
         }

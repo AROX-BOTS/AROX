@@ -12,7 +12,7 @@ export async function Cmv2ReactParseRunner(taskId: number, wallet: anchor.Wallet
         return;
     }
     try{
-        await CandyMachineResolveV2(taskId, wallet, siteKeys.rpcHostString, siteKeys.candyMachineIdString, mintUrl, undefined);
+        await CandyMachineResolveV2(taskId, wallet, siteKeys.rpcHostString, siteKeys.candyMachineIdString, mintUrl, undefined, undefined, undefined);
     } catch (error: any) {
         let message = error.msg || "Minting failed! Please try again!";
         if (!error.msg) {
@@ -26,7 +26,7 @@ export async function Cmv2ReactParseRunner(taskId: number, wallet: anchor.Wallet
             if (error.code === 311) {
                 message = `SOLD OUT!`;
             } else if (error.code === 312) {
-                await CandyMachineResolveV2(taskId, wallet, siteKeys.rpcHostString, siteKeys.candyMachineIdString, mintUrl, undefined);
+                await CandyMachineResolveV2(taskId, wallet, siteKeys.rpcHostString, siteKeys.candyMachineIdString, mintUrl, undefined, undefined, undefined);
                 message = `Minting period hasn't started yet.`;
             }
         }

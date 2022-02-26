@@ -6,7 +6,16 @@ import {QueueMintStatusLog} from "../mintStatusLogger";
 import bs58 from 'bs58';
 import axios from 'axios';
 import {MintLayout} from '@solana/spl-token';
-import {getLaunchpadCandyMachineState, getTokenWallet, getWalletLimit, mintOneToken, awaitTransactionSignatureConfirmation, getMasterEdition, getMetadata} from "../magicEdenCandyMachine";
+import {
+    getLaunchpadCandyMachineState,
+    getTokenWallet,
+    getWalletLimit,
+    mintOneToken,
+    awaitTransactionSignatureConfirmation,
+    getMasterEdition,
+    getMetadata,
+    getRaffleTicketInfo, getRaffleEscrowInfo, getLaunchStagesInfo
+} from "../magicEdenCandyMachine";
 
 export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined): Promise<void> => {
     if(wallet == undefined){
@@ -32,18 +41,27 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
         const web3Config: anchor.web3.ConnectionConfig = {
             httpHeaders: {origin: "https://aroxbots.com", referer: "https://aroxbots.com"}
         };
-        connection = new anchor.web3.Connection("https://dry-falling-water.solana-mainnet.quiknode.pro/059cac57150dbd31b529745ae4333bc0414aa7bc/", web3Config); //https://ssc-dao.genesysgo.net/
+        connection = new anchor.web3.Connection("https://dry-falling-water.solana-mainnet.quiknode.pro/", web3Config); //https://ssc-dao.genesysgo.net/
        // connection = new anchor.web3.Connection("https://ssc-dao.genesysgo.net/", web3Config);
     }
     const txTimeout = 30000; // milliseconds (confirm this works for your project)'
 
+    try{
+        const state =  await getLaunchpadCandyMachineState(
+            wallet,
+            candyMachinePublicId,
+            connection
+        );
+    } catch(e){
+        console.log(e);
+    }
     const state =  await getLaunchpadCandyMachineState(
         wallet,
         candyMachinePublicId,
         connection
     );
     log({taskId: taskId, message: "Candy machine functions initialised", type: "success"});
-    log({taskId: taskId, message: "Items remaining in machine: " + state.itemsRemaining + ", Live at: " + state.goLiveDate + ", total redeemed: " + state.itemsRedeemed + ", total available: " + state.itemsAvailable + " price: " + state.price+"SOL", type: "info"});
+    log({taskId: taskId, message: "Items remaining in machine: " + state.itemsRemaining + ", total redeemed: " + state.itemsRedeemed + ", total available: " + state.itemsAvailable, type: "info"});
 
     if(state.itemsRemaining == 0){
         log({taskId: taskId, message: "No items left to mint", type: "critical"});
@@ -61,16 +79,24 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
     // @ts-ignore
     const walletLimitArrayOne = walletLimit[1];
     const tokenWallet = await getTokenWallet(wallet.publicKey, mintKeys.publicKey);
+    const raffleTicketInfo = await getRaffleTicketInfo(state.candyMachine.id, mintKeys.publicKey);
+    const raffleEscrowInformation = await getRaffleEscrowInfo(state.candyMachine.id, mintKeys.publicKey);
+    const launchStagesInfo = await getLaunchStagesInfo(state.candyMachine.id);
 
-    const mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne);
+    try{
+        const mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
+    } catch(e){
+        console.log(e);
+    }
+    const mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
 
-    let currentDate = new Date();
+   /* let currentDate = new Date();
     while(currentDate <= state.goLiveDate){
         // @ts-ignore
         let now = state.goLiveDate - Date.now();
         log({taskId: taskId, message: "Sale not live, sleeping "+now+"ms and checking again", type: "info"});
         await sleep(now);
-    }
+    }*/
 
     const blockHash = await connection.getRecentBlockhash("finalized");
     mintToken.recentBlockhash = blockHash.blockhash;
@@ -82,18 +108,40 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
         console.log(e);
     }
 
-    const signMint = await axios.post("http://127.0.0.1:5000/", {"response": "2EE2Hhoe8fVAYn7J5qwuayNmrEgmTPskLyszojv", "message": message});
-
+    let signMint;
+    log({taskId: taskId, message: "Getting signature from ME Servers...", type: "info"});
+    while(signMint == undefined){
+        try{
+            signMint = await axios.post("http://185.38.142.173/api/magiceden/sign", {"response": "", "message": message}, {headers:{"User-Agent": "Magic-Eden", "Referer":"https://magiceden.io/","Origin":"https://magiceden.io"}});
+        } catch(e){
+            console.log(e)
+        }
+    }
+    if(signMint.data.publicKey != state.notary.toBase58() || signMint.data.error){
+        while(signMint.data.publicKey != state.notary.toBase58()){
+            log({taskId: taskId, message: "Error getting correct signature from ME, retrying", type: "error"});
+            try{
+                signMint = await axios.post("http://185.38.142.173/api/magiceden/sign", {"response": "", "message": message}, {headers:{"User-Agent": "Magic-Eden", "Referer":"https://magiceden.io/","Origin":"https://magiceden.io"}});
+            } catch(e){
+                console.log(e)
+            }
+        }
+    }
     const signMintSignature = signMint.data.signature; //data.publickey skal være = state.notary pubkey.
     await wallet.signTransaction(mintToken)
     mintToken.partialSign(mintKeys);
     const buffer = bs58.decode(signMintSignature);
     mintToken.addSignature(state.notary, buffer);
 
-    log({taskId: taskId, message: "Sale live, trying to mint...", type: "info"});
+    log({taskId: taskId, message: "Sending transaction...", type: "info"});
     try{
-        const tx = await web3.sendAndConfirmRawTransaction(connection, mintToken.serialize({verifySignatures: false}));
+        const tx = await web3.sendAndConfirmRawTransaction(connection, mintToken.serialize({verifySignatures: false, preflightCommitment: "processed"}));
         log({taskId: taskId, message: "Success TX: " +  tx, type: "success"});
+        if(rpcHost != undefined){
+            await QueueWebhook(tx, "Magic Eden Launchpad", "CUSTOM");
+        } else{
+            await QueueWebhook(tx, "Magic Eden Launchpad", "AROX");
+        }
     } catch(e){
         console.log(e);
     }

@@ -2,7 +2,8 @@ import * as anchor from '@project-serum/anchor';
 import { MintLayout, TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import {sleep} from "./candy-machine";
 import {TransactionInstruction} from "@solana/web3.js";
-export const ME_CANDY_MACHINE_PROGRAM = new anchor.web3.PublicKey("CMY8R8yghKfFnHKCWjzrArUpYH4PbJ56aWBr4kCP4DMk");
+import bs58 from "bs58";
+export const ME_CANDY_MACHINE_PROGRAM = new anchor.web3.PublicKey("CMZYPASGWeTz7RNGHaRJfCq2XQ5pYK6nDvVQxzkH51zb");
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new anchor.web3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
     TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 
@@ -16,14 +17,13 @@ interface MeCandyMachineState {
     candyMachine: MeCandyMachine;
     itemsAvailable: number;
     itemsRedeemed: number;
+    itemsRedeemedRaffle: number;
     itemsRemaining: number;
-    goLiveDate: Date,
-    price: number;
     wallet: anchor.web3.PublicKey;
     config: anchor.web3.PublicKey;
     notary: anchor.web3.PublicKey;
     bump: number;
-    walletLimit: number;
+
 }
 
 interface WalletLimitData {
@@ -144,32 +144,29 @@ export const getLaunchpadCandyMachineState = async (
 
     const state: any = await program.account.candyMachine.fetch(candyMachineId);
 
-    const price = state.data.price.toNumber() / 1000000000;
-    const itemsAvailable = state.data.itemsAvailable.toNumber();
-    const itemsRedeemed = state.itemsRedeemed.toNumber();
+  //  const price = state.data.price.toNumber() / 1000000000;
+    const itemsAvailable = state.itemsAvailable.toNumber();
+    const itemsRedeemed = state.itemsRedeemedNormal.toNumber();
+    const itemsRedeemedRaffle = state.itemsRedeemedRaffle.toNumber();
     const itemsRemaining = itemsAvailable - itemsRedeemed;
 
-    let goLiveDate = state.data.goLiveDate.toNumber();
-    goLiveDate = new Date(goLiveDate * 1000);
+  //  let goLiveDate = state.data.goLiveDate.toNumber();
+  //  goLiveDate = new Date(goLiveDate * 1000);
     const wallet = state.wallet;
     const config = state.config;
     const notary = state.notary;
     const bump = state.bump;
-    const walletLimit = state.data.walletLimit;
-
 
     return {
         candyMachine,
         itemsAvailable,
         itemsRedeemed,
+        itemsRedeemedRaffle,
         itemsRemaining,
-        goLiveDate,
-        price,
         wallet,
         config,
         notary,
-        bump,
-        walletLimit
+        bump
     };
 }
 
@@ -177,13 +174,57 @@ export const getWalletLimit = async(
     candyMachineId: anchor.web3.PublicKey,
     mintingWalletPubkey = anchor.web3.PublicKey
 ): Promise<WalletLimitData> => {
-    const d = {};
     // @ts-ignore
-    d.znOmU = "wallet_limit";
-    const e = d;
-    // @ts-ignore
-    return await anchor.web3.PublicKey.findProgramAddress([Buffer.from(e.znOmU), candyMachineId.toBuffer(), mintingWalletPubkey.toBuffer()], ME_CANDY_MACHINE_PROGRAM);
+    return await anchor.web3.PublicKey.findProgramAddress([Buffer.from("wallet_limit"), candyMachineId.toBuffer(), mintingWalletPubkey.toBuffer()], ME_CANDY_MACHINE_PROGRAM);
 }
+
+export const getRaffleTicketInfo = async (
+    candyMachineId: anchor.web3.PublicKey,
+    mint: anchor.web3.PublicKey
+): Promise<anchor.web3.PublicKey> => {
+    return (
+        await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("raffle_ticket"),
+                candyMachineId.toBuffer(),
+                mint.toBuffer(),
+            ],
+            ME_CANDY_MACHINE_PROGRAM
+        )
+    )[0];
+};
+
+export const getRaffleEscrowInfo = async (
+    candyMachineId: anchor.web3.PublicKey,
+    mint: anchor.web3.PublicKey
+): Promise<anchor.web3.PublicKey> => {
+    return (
+        await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("raffle_ticket"),
+                candyMachineId.toBuffer(),
+                mint.toBuffer(),
+                Buffer.from("escrow"),
+            ],
+            ME_CANDY_MACHINE_PROGRAM
+        )
+    )[0];
+};
+
+export const getLaunchStagesInfo = async (
+    candyMachineId: anchor.web3.PublicKey
+): Promise<anchor.web3.PublicKey> => {
+    return (
+        await anchor.web3.PublicKey.findProgramAddress(
+            [
+                Buffer.from("candy_machine"),
+                Buffer.from("launch_stages"),
+                candyMachineId.toBuffer()
+            ],
+            ME_CANDY_MACHINE_PROGRAM
+        )
+    )[0];
+};
 
 export const getTokenWallet = async (
     wallet: anchor.web3.PublicKey,
@@ -259,12 +300,15 @@ export const getMasterEdition = async (
 };
 
 
-export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mintAccount: any, tokenWallet: any, connection: any, program: any, wallet: any, config: any, metadata: any, masterEdition: any, rentExemption: any, notary: any, walletLimitPubkey: any, walletLimitOne: any) => {
+export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mintAccount: any, tokenWallet: any, connection: any, program: any, wallet: any, config: any, metadata: any, masterEdition: any, rentExemption: any, notary: any, walletLimitPubkey: any, walletLimitOne: any, raffleTicketInfo: any, raffleTicketEscrow: any, launchStagesInfo: any) => {
     const accounts = {
         config: config,
         candyMachine: candyMachine.id,
+        launchStagesInfo: launchStagesInfo,
         payer: payerUserWallet,
         wallet: wallet,
+        //raffleTicket: raffleTicketInfo,
+        //raffleEscrow: raffleTicketEscrow,
         mint: mintAccount.publicKey,
         metadata: metadata,
         masterEdition: masterEdition,
@@ -297,7 +341,7 @@ export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mint
     const memo = new TransactionInstruction({
         programId: new anchor.web3.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
         keys: [],
-        data: Buffer.from("2EE2Hhoe8fVAYn7J5qwuayNmrEgmTPskLyszojv")
+        data: Buffer.from(bs58.encode(Buffer.from("we live to fight another day")))
     });
 
     try{

@@ -8,7 +8,7 @@ import {sleep} from "./utils/candyMachineUtilities";
 import {VersionChecker} from "./utils/versionChecker";
 import {log} from "./utils/modules/sharedTaskFunctions";
 
-export const version = "BETA 0.17"
+export const version = "BETA 0.2"
 /*
 Notes:
 Hele starten er IKKE async, da vi gerne vil tjekke om tingene eksisterer og om licens etc. er valid før vi kører resten af programmet
@@ -43,7 +43,7 @@ if (!fs.existsSync(configFile)){
 }
 
 if (!fs.existsSync(taskFile)){
-    fs.writeFileSync(taskFile,'"TYPE","URL","PARSE_TYPE","WALLET","TO_MINT","CMCONFIG","CMID","CMTREASURY","CMSTART","CMNETWORK","CMRPC"');
+    fs.writeFileSync(taskFile,'"TYPE","URL","WALLET","CMID","CUSTOMSTART","CUSTOMRPC","RETRYDELAY"');
 }
 
 const initializationSteps = async (): Promise<void> => {

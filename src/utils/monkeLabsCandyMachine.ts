@@ -166,98 +166,137 @@ export const getCandyMachineCreator = async (candyMachine: anchor.web3.PublicKey
     );
 };
 
-const programId = "monke1YPHGc3oTmHu1aqepy87suBtys92a2MbonHTww"
+const programId = "miniYQHyKbyrPBftpouZJVo4S1SkoYJoKngtfiJB9yq"
 const our_wallet = new PublicKey("mnKzuL9RMtR6GeSHBfDpnQaefcMsiw7waoTSduKNiXM");
 
 export const mintOneToken = async (wallet: any, connection: any, taskId: number, pdaBuf: number, whitelistKey: string, indexKey: string, configKey: string, primaryWallet: string) => {
-    const meta_program   = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-    const minter_program     = new PublicKey(programId),
-        associated_program = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
-        mint_kp  = Keypair.generate(),
-        token_key = (await PublicKey.findProgramAddress(
-            [
-                wallet.publicKey.toBuffer(),
-                TOKEN_PROGRAM_ID.toBuffer(),
-                mint_kp.publicKey.toBuffer()
-            ],
-            associated_program
-        ))[0],
-        meta_key = (await PublicKey.findProgramAddress(
-            [
-                new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]),
-                meta_program.toBuffer(),
-                mint_kp.publicKey.toBuffer()
-            ],
-            meta_program
-        ))[0],
-        auth_key = (await PublicKey.findProgramAddress(
-            [
-                new Uint8Array([pdaBuf]),
-                new Uint8Array([ 97, 117, 116, 104 ]),
-                minter_program.toBuffer(),
-            ],
-            minter_program
-        ))[0],
+       let meta_program = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+        minter_program = new PublicKey(programId),
+        associated_program = new PublicKey(
+            'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
+        ),
+        mint_kp = Keypair.generate(),
+        token_key = (
+            await PublicKey.findProgramAddress(
+                [
+                    wallet.publicKey.toBuffer(),
+                    TOKEN_PROGRAM_ID.toBuffer(),
+                    mint_kp.publicKey.toBuffer(),
+                ],
+                associated_program
+            )
+        )[0],
+        meta_key = (
+            await PublicKey.findProgramAddress(
+                [
+                    new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]),
+                    meta_program.toBuffer(),
+                    mint_kp.publicKey.toBuffer(),
+                ],
+                meta_program
+            )
+        )[0],
+        auth_key = (
+            await PublicKey.findProgramAddress(
+                [
+                    new Uint8Array([
+                        pdaBuf,
+                        (pdaBuf & 0xff00) >> 8,
+                    ]),
+                    new Uint8Array([97, 117, 116, 104]),
+                    minter_program.toBuffer(),
+                ],
+                minter_program
+            )
+        )[0],
         sys_key = new PublicKey('11111111111111111111111111111111'),
         rent_key = new PublicKey('SysvarRent111111111111111111111111111111111'),
-        uniqPDA = (await PublicKey.findProgramAddress(
-            [
-                new Uint8Array([pdaBuf]),
-                wallet.publicKey.toBuffer(),
-                minter_program.toBuffer()
-            ],
-            minter_program
-        ))[0],
-        timePDA = (await PublicKey.findProgramAddress(
-            [
-                new Uint8Array([109, 108, 116, 105, 109, 101]),
-                wallet.publicKey.toBuffer(),
-                minter_program.toBuffer()
-            ],
-            minter_program
-        ))[0],
-        edition_key = (await PublicKey.findProgramAddress(
-            [
-                new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]),
-                meta_program.toBuffer(),
-                mint_kp.publicKey.toBuffer(),
-                new Uint8Array([101, 100, 105, 116, 105, 111, 110])
-            ],
-            meta_program
-        ))[0],
+        uniqPDA = (
+            await PublicKey.findProgramAddress(
+                [
+                    new Uint8Array([
+                        pdaBuf,
+                        (pdaBuf & 0xff00) >> 8,
+                    ]),
+                    wallet.publicKey.toBuffer(),
+                    minter_program.toBuffer(),
+                ],
+                minter_program
+            )
+        )[0],
+        timePDA = (
+            await PublicKey.findProgramAddress(
+                [
+                    new Uint8Array([108, 116, 105, 109, 101]),
+                    wallet.publicKey.toBuffer(),
+                    minter_program.toBuffer(),
+                ],
+                minter_program
+            )
+        )[0],
+        edition_key = (
+            await PublicKey.findProgramAddress(
+                [
+                    new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]),
+                    meta_program.toBuffer(),
+                    mint_kp.publicKey.toBuffer(),
+                    new Uint8Array([101, 100, 105, 116, 105, 111, 110]),
+                ],
+                meta_program
+            )
+        )[0],
         their_wallet = new PublicKey(primaryWallet),
-        ix_key       = new PublicKey(indexKey),
-        wl_key       = new PublicKey(whitelistKey),
-        config_key   = new PublicKey(configKey);
+        ix_key = new PublicKey(indexKey),
+        wl_key = new PublicKey(whitelistKey),
+        config_key = new PublicKey(configKey),
+        other_key = new PublicKey('7FHzVCP9eX6zmZjw3qwvmdDMhSvCkLxipQatAqhtbVBf');
 
     // accounts
-    let account_0 = {pubkey: ix_key,            isSigner: false, isWritable: true},
-        account_1     = {pubkey: their_wallet,      isSigner: false, isWritable: true},
-        account_2     = {pubkey: our_wallet,        isSigner: false, isWritable: true},
-        account_3     = {pubkey: wallet.publicKey,  isSigner: true,  isWritable: true},
-        account_4     = {pubkey: wl_key,            isSigner: false, isWritable: true},
-        account_5     = {pubkey: token_key,         isSigner: false, isWritable: true},
-        account_6     = {pubkey: sys_key,           isSigner: false, isWritable: false},
-        account_7     = {pubkey: meta_key,          isSigner: false, isWritable: true},
-        account_8     = {pubkey: mint_kp.publicKey, isSigner: false, isWritable: true},
-        account_9     = {pubkey: meta_program,      isSigner: false, isWritable: false},
-        account_10    = {pubkey: rent_key,          isSigner: false, isWritable: false},
-        account_11    = {pubkey: auth_key,          isSigner: false, isWritable: true},
-        account_12    = {pubkey: TOKEN_PROGRAM_ID,  isSigner: false, isWritable: false},
-        account_13    = {pubkey: uniqPDA,           isSigner: false, isWritable: true},
-        account_14    = {pubkey: timePDA,           isSigner: false, isWritable: true},
-        account_15    = {pubkey: edition_key,       isSigner: false, isWritable: true},
-        account_16    = {pubkey: config_key,        isSigner: false, isWritable: true};
+    let account_0 = { pubkey: ix_key, isSigner: false, isWritable: true },
+        account_1 = { pubkey: their_wallet, isSigner: false, isWritable: true },
+        account_2 = { pubkey: our_wallet, isSigner: false, isWritable: true },
+        account_3 = { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+        account_4 = { pubkey: wl_key, isSigner: false, isWritable: true },
+        account_5 = { pubkey: token_key, isSigner: false, isWritable: true },
+        account_6 = { pubkey: sys_key, isSigner: false, isWritable: false },
+        account_7 = { pubkey: meta_key, isSigner: false, isWritable: true },
+        account_8 = {
+            pubkey: mint_kp.publicKey,
+            isSigner: false,
+            isWritable: true,
+        },
+        account_9 = { pubkey: meta_program, isSigner: false, isWritable: false },
+        account_10 = { pubkey: rent_key, isSigner: false, isWritable: false },
+        account_11 = { pubkey: auth_key, isSigner: false, isWritable: true },
+        account_12 = {
+            pubkey: TOKEN_PROGRAM_ID,
+            isSigner: false,
+            isWritable: false,
+        },
+        account_13 = { pubkey: uniqPDA, isSigner: false, isWritable: true },
+        account_14 = { pubkey: timePDA, isSigner: false, isWritable: true },
+        account_15 = { pubkey: edition_key, isSigner: false, isWritable: true },
+        account_16 = { pubkey: config_key, isSigner: false, isWritable: true },
+        account_17 = {
+            pubkey: new PublicKey('Sysvar1nstructions1111111111111111111111111'),
+            isSigner: false,
+            isWritable: false,
+        },
+        account_18 = { pubkey: other_key, isSigner: false, isWritable: false };
 
-    let mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span),
-        tokenRent    = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
+    let mintRent = await connection.getMinimumBalanceForRentExemption(
+            MintLayout.span
+        ),
+        tokenRent = await connection.getMinimumBalanceForRentExemption(
+            AccountLayout.span
+        );
 
     let mintAccount = SystemProgram.createAccount({
             fromPubkey: wallet.publicKey,
             newAccountPubkey: mint_kp.publicKey,
             lamports: mintRent,
             space: MintLayout.span,
-            programId: TOKEN_PROGRAM_ID
+            programId: TOKEN_PROGRAM_ID,
         }),
         tokenAccount = Token.createAssociatedTokenAccountInstruction(
             associated_program,
@@ -265,14 +304,14 @@ export const mintOneToken = async (wallet: any, connection: any, taskId: number,
             mint_kp.publicKey,
             token_key,
             wallet.publicKey,
-            wallet.publicKey,
+            wallet.publicKey
         ),
         create_token = Token.createInitMintInstruction(
             TOKEN_PROGRAM_ID,
             mint_kp.publicKey,
             0,
             wallet.publicKey,
-            null,
+            null
         ),
         mint_into_token_account = Token.createMintToInstruction(
             TOKEN_PROGRAM_ID,
@@ -280,19 +319,38 @@ export const mintOneToken = async (wallet: any, connection: any, taskId: number,
             token_key,
             wallet.publicKey,
             [],
-            1,
+            1
         ),
         instruction = new TransactionInstruction({
-            keys: [account_0, account_1, account_2, account_3, account_4, account_5, account_6, account_7, account_8, account_9, account_10, account_11, account_12, account_13, account_14, account_15, account_16],
+            keys: [
+                account_0,
+                account_1,
+                account_2,
+                account_3,
+                account_4,
+                account_5,
+                account_6,
+                account_7,
+                account_8,
+                account_9,
+                account_10,
+                account_11,
+                account_12,
+                account_13,
+                account_14,
+                account_15,
+                account_16,
+                account_17,
+                account_18,
+            ],
             programId: minter_program,
-            data: Buffer.from(new Uint8Array([10]))
+            data: Buffer.from(new Uint8Array([9])),
         }),
         create_time = new TransactionInstruction({
             keys: [account_3, account_14, account_6],
             programId: minter_program,
-            data: Buffer.from(new Uint8Array([3]))
+            data: Buffer.from(new Uint8Array([14])),
         });
-
 
     let transaction = new Transaction().add(
         mintAccount,
@@ -300,7 +358,7 @@ export const mintOneToken = async (wallet: any, connection: any, taskId: number,
         tokenAccount,
         mint_into_token_account,
         create_time,
-        instruction,
+        instruction
     );
 
     let bh = (await connection.getRecentBlockhash()).blockhash;
@@ -316,23 +374,31 @@ export const mintOneToken = async (wallet: any, connection: any, taskId: number,
             sig = await sendAndConfirmRawTransaction(
                 connection,
                 signedTransaction.serialize(),
-                { commitment: 'finalized'}
+                { commitment: 'confirmed' }
             );
-        return sig;
+
+        let conf = await connection.getConfirmedTransaction(sig, 'confirmed');
+        let timed_out = conf!.meta!.logMessages!.join('').indexOf('timeout') > -1;
+
+        if (timed_out) {
+            console.log("timeout");
+        } else {
+            console.log("success");
+            return sig;
+        }
     } catch (e: any) {
-        let error = "Unknown error occurred.";
+        let error = 'Unknown error occurred.';
 
         if (e.logs !== undefined) {
             error = e.logs[e.logs.length - 3].split(' ').splice(2).join(' ');
-            if (error.indexOf('0x1') > -1 ) {
-                console.log(error)
-                error = "Not enough Solana."
+            if (error.indexOf('0x1') > -1) {
+                console.log(error);
+                error = 'Not enough Solana.';
             }
         }
-        log({taskId: taskId, message: "Unknown error occurred: " +  error, type: "critical"})
     } finally {
     }
-}
+};
 
 export const shortenAddress = (address: string, chars = 4): string => {
     return `${address.slice(0, chars)}...${address.slice(-chars)}`;

@@ -72,7 +72,7 @@ export const StartTasks = async(): Promise<void> => {
                 i++;
                 break;
             }
-            case "cmv2-react-parse":{
+           /* case "cmv2-react-parse":{
                 //@ts-ignore
                 let wallet = await LoadWallet(task.WALLET)
                 if(wallet == undefined){
@@ -82,7 +82,7 @@ export const StartTasks = async(): Promise<void> => {
                 tasks.push(Cmv2ReactParseRunner(i, wallet, task.URL));
                 i++;
                 break;
-            }
+            }*/
             case "me-launchpad":{
                 //@ts-ignore
                 let wallet = await LoadWallet(task.WALLET)
@@ -101,7 +101,7 @@ export const StartTasks = async(): Promise<void> => {
                     return;
                 }
                 // @ts-ignore
-                tasks.push(MonkeLabsParseRunner(i, wallet, task.URL));
+                tasks.push(MonkeLabsParseRunner(i, wallet, task.URL, task.CUSTOMSTART, task.CUSTOMRPC, task.RETRYDELAY));
                 i++;
                 break;
             }

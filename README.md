@@ -5,4 +5,4 @@ tsc -p .
 
 cd tsc-out
 
-pkg index.js —out-path BUILD
+pkg index.js —-out-path BUILD
