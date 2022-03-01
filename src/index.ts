@@ -43,7 +43,7 @@ if (!fs.existsSync(configFile)){
 }
 
 if (!fs.existsSync(taskFile)){
-    fs.writeFileSync(taskFile,'"TYPE","URL","WALLET","CMID","CUSTOMSTART","CUSTOMRPC","RETRYDELAY"');
+    fs.writeFileSync(taskFile,'"TYPE","URL","WALLET","CONTRACT","CUSTOMSTART","CUSTOMRPC","RETRYDELAY"');
 }
 
 const initializationSteps = async (): Promise<void> => {

@@ -9,6 +9,9 @@ import {ManualRunnerV2} from "./modules/cmV2ManualTask";
 import {Cmv2ReactParseRunner} from "./modules/cmV2ReactParsing";
 import {MagicEdenLaunchpadTask} from "./modules/magicEdenLaunchpadTask";
 import {MonkeLabsParseRunner} from "./modules/monkeLabsParsingTask";
+import {Mev2FloorSniper} from "./modules/mev2FloorSniper";
+import {NearContract} from "./modules/nearContractCaller";
+import {ParasPriceSnipe} from "./modules/parasPriceSnipe";
 
 const appdataPath = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME : process.env.HOME + "/.local/share");
 // @ts-ignore
@@ -102,6 +105,29 @@ export const StartTasks = async(): Promise<void> => {
                 }
                 // @ts-ignore
                 tasks.push(MonkeLabsParseRunner(i, wallet, task.URL, task.CUSTOMSTART, task.CUSTOMRPC, task.RETRYDELAY));
+                i++;
+                break;
+            }
+            case "mev2-price-snipe":{
+                //@ts-ignore
+                let wallet = await LoadWallet(task.WALLET)
+                if(wallet == undefined){
+                    return;
+                }
+                // @ts-ignore
+                tasks.push(Mev2FloorSniper(i, wallet, task));
+                i++;
+                break;
+            }
+            case "near-contract":{
+                // @ts-ignore
+                tasks.push(NearContract(i, task));
+                i++;
+                break;
+            }
+            case "paras-price-snipe":{
+                // @ts-ignore
+                tasks.push(ParasPriceSnipe(i, task));
                 i++;
                 break;
             }

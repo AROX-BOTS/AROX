@@ -8,6 +8,7 @@ import {
 import {log} from './sharedTaskFunctions';
 import {QueueWebhook} from "../webhookHandler";
 import {QueueMintStatusLog} from "../mintStatusLogger";
+import {sendAndConfirmRawTransaction} from "@solana/web3.js";
 
 export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, mintUrl: string | undefined, customStart: number | undefined, customRpc: string | undefined, retryDelay: string | undefined): Promise<void> => {
     if(wallet == undefined){
@@ -65,6 +66,14 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     if(customStart == "") customStart = undefined;
 
     let currentDate = new Date();
+    const transactionInstructions = await mintOneToken(candyMachineState, wallet.publicKey);
+        /*await sendTransactions(
+                candyMachine.program.provider.connection,
+                candyMachine.program.provider.wallet,
+                [instructions, cleanupInstructions],
+                [signers, []],
+            )
+        ).txs.map(t => t.txid);*/
     if(customStart != undefined){
         log({taskId: taskId, message: "Using custom start date...", type: "info"});
         while(currentDate.valueOf() <= customStart){
@@ -85,18 +94,18 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     }
 
     log({taskId: taskId, message: "Sale live, trying to mint...", type: "info"});
+    const blockHash = await connection.getRecentBlockhash("finalized");
+    transactionInstructions.recentBlockhash = blockHash.blockhash;
 
     try {
         if (wallet) {
             let status;
             let mintTxId;
             try{
-                mintTxId = await mintOneToken(
-                    candyMachineState,
-                    wallet.publicKey
-                );
 
-                log({taskId: taskId, message: "Finalised mint, awaiting transaction confirmation", type: "info"});
+                mintTxId = await sendAndConfirmRawTransaction(connection, transactionInstructions.serialize());
+
+                log({taskId: taskId, message: "Sent mint, awaiting transaction confirmation", type: "info"});
                 status = await awaitTransactionSignatureConfirmation(
                     // @ts-ignore
                     mintTxId[0],
@@ -118,10 +127,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
             // @ts-ignore
             while(status.err){
                 try{
-                    mintTxId = await mintOneToken(
-                        candyMachineState,
-                        wallet.publicKey
-                    );
+                    mintTxId = await sendAndConfirmRawTransaction(connection, transactionInstructions.serialize());
 
                     log({taskId: taskId, message: "Finalised mint, awaiting transaction confirmation", type: "info"});
                     status = await awaitTransactionSignatureConfirmation(

@@ -374,7 +374,7 @@ export const mintOneToken = async (wallet: any, connection: any, taskId: number,
             sig = await sendAndConfirmRawTransaction(
                 connection,
                 signedTransaction.serialize(),
-                { commitment: 'confirmed' }
+                { commitment: 'confirmed', skipPreflight: true }
             );
 
         let conf = await connection.getConfirmedTransaction(sig, 'confirmed');

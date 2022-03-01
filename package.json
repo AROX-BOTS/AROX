@@ -19,6 +19,7 @@
     "colors": "^1.4.0",
     "csv-parser": "^3.0.0",
     "got": "^11.8.2",
+    "near-api-js": "^0.44.2",
     "node-machine-id": "^1.1.12",
     "queue-promise": "^2.2.1"
   },

@@ -17,7 +17,7 @@ import {
     getRaffleTicketInfo, getRaffleEscrowInfo, getLaunchStagesInfo
 } from "../magicEdenCandyMachine";
 
-export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined): Promise<void> => {
+export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, customStart: string | undefined): Promise<void> => {
     if(wallet == undefined){
         log({taskId: taskId, message: "Wallet is undefined", type: "error"});
         return;
@@ -83,20 +83,39 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
     const raffleEscrowInformation = await getRaffleEscrowInfo(state.candyMachine.id, mintKeys.publicKey);
     const launchStagesInfo = await getLaunchStagesInfo(state.candyMachine.id);
 
+    let mintToken;
     try{
-        const mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
+        mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
     } catch(e){
         console.log(e);
     }
-    const mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
+    // @ts-ignore
+    if(customStart == "") customStart = undefined;
 
-   /* let currentDate = new Date();
-    while(currentDate <= state.goLiveDate){
+    let currentDate = new Date();
+    if(customStart != undefined){
         // @ts-ignore
-        let now = state.goLiveDate - Date.now();
-        log({taskId: taskId, message: "Sale not live, sleeping "+now+"ms and checking again", type: "info"});
-        await sleep(now);
-    }*/
+        while(currentDate.getTime() <= customStart){
+            // @ts-ignore
+            let now = customStart - Date.now();
+            if(0>now){
+                break;
+            }
+            log({taskId: taskId, message: "Custom start parameter set, sleeping "+now+"ms and then running", type: "info"});
+            await sleep(now);
+        }
+    } else{
+        // @ts-ignore
+        while(currentDate.getTime() <= candyMachineState.state.goLiveDate.toNumber()){
+            // @ts-ignore
+            let now = candyMachineState.goLiveDate - Date.now();
+            if(0>now){
+                break;
+            }
+            log({taskId: taskId, message: "Sale not live, sleeping "+now+"ms and then running", type: "info"});
+            await sleep(now);
+        }
+    }
 
     const blockHash = await connection.getRecentBlockhash("finalized");
     mintToken.recentBlockhash = blockHash.blockhash;
@@ -135,7 +154,7 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
 
     log({taskId: taskId, message: "Sending transaction...", type: "info"});
     try{
-        const tx = await web3.sendAndConfirmRawTransaction(connection, mintToken.serialize({verifySignatures: false, preflightCommitment: "processed"}));
+        const tx = await web3.sendAndConfirmRawTransaction(connection, mintToken.serialize({verifySignatures: false, preflightCommitment: "processed", skipPreflight: true}));
         log({taskId: taskId, message: "Success TX: " +  tx, type: "success"});
         if(rpcHost != undefined){
             await QueueWebhook(tx, "Magic Eden Launchpad", "CUSTOM");
