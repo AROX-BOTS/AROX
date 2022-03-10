@@ -3,5 +3,5 @@ import {MagicEdenLaunchpadHandler} from "./baseMagicEdenLaunchpadHandler";
 
 export async function MagicEdenLaunchpadTask(taskId: number, wallet: anchor.Wallet, keys: Object){
     // @ts-ignore
-    await MagicEdenLaunchpadHandler(taskId, wallet, keys.CUSTOMRPC, keys.CMID);
+    await MagicEdenLaunchpadHandler(taskId, wallet, keys.CUSTOMRPC, keys.CONTRACT);
 }

@@ -30,9 +30,10 @@ export async function Mev2FloorSniper(taskId: number, wallet: anchor.Wallet, key
     let collection = keys.URL;
     if(collection == "") collection = undefined;
     if(collection == undefined){console.log("please define collection"); return;}
-    const collectionUrl = "https://api-mainnet.magiceden.io/rpc/getListedNFTsByQuery?q=%7B%22%24match%22%3A%7B%22collectionSymbol%22%3A%22"+collection+"%22%7D%2C%22%24sort%22%3A%7B%22takerAmount%22%3A1%2C%22createdAt%22%3A-1%7D%2C%22%24skip%22%3A0%2C%22%24limit%22%3A20%7D";
+    const collectionUrl = "https://api-mainnet.magiceden.dev/rpc/getListedNFTsByQuery?q=%7B%22%24match%22%3A%7B%22collectionSymbol%22%3A%22"+collection+"%22%7D%2C%22%24sort%22%3A%7B%22takerAmount%22%3A1%2C%22createdAt%22%3A-1%7D%2C%22%24skip%22%3A0%2C%22%24limit%22%3A20%7D";
 
     let hasFoundSnipe = false;
+    let hasSniped = false;
     let snipeObject = {
         sellerId: undefined,
         auctionHouseKey: undefined,
@@ -41,64 +42,67 @@ export async function Mev2FloorSniper(taskId: number, wallet: anchor.Wallet, key
         price: undefined,
         sellerReferral: undefined
     };
-    while(!hasFoundSnipe){
-        const getListings = await axios.post("http://185.38.142.173/api/magiceden/getsite",{"url": collectionUrl});
-        const listingsObject = JSON.parse(getListings.data.textResponse);
+    while(!hasSniped){
+        while(!hasFoundSnipe){
+            const getListings = await axios.get(collectionUrl);
+            const listingsObject = getListings.data;
 
-        listingsObject.results.every((salepost: any) =>{
-            let price = salepost.price;
-            // @ts-ignore
-            if(price <= Number(keys.CONTRACT)){
-                hasFoundSnipe = true;
-                snipeObject = {
-                    sellerId: salepost.owner,
-                    auctionHouseKey: salepost.v2.auctionHouseKey,
-                    tokenMintKey: salepost.mintAddress,
-                    tokenAtaKey: salepost.id,
-                    price: price,
-                    sellerReferral: salepost.v2.sellerReferral
-                };
-                return false;
+            listingsObject.results.every((salepost: any) =>{
+                let price = salepost.price;
+                // @ts-ignore
+                if(price <= Number(keys.CONTRACT)){
+                    hasFoundSnipe = true;
+                    snipeObject = {
+                        sellerId: salepost.owner,
+                        auctionHouseKey: salepost.v2.auctionHouseKey,
+                        tokenMintKey: salepost.mintAddress,
+                        tokenAtaKey: salepost.id,
+                        price: price,
+                        sellerReferral: salepost.v2.sellerReferral
+                    };
+                    return false;
+                }
+                return true;
+            });
+
+            if(!hasFoundSnipe){
+                log({taskId: taskId, message: "Waiting retrydelay, and then trying again. If retrydelay isn't specified, defaulting to 5sec", type: "info"})
+                if(retryDelay){
+                    await sleep(Number(retryDelay))
+                } else{
+                    await sleep(5000)
+                }
             }
-            return true;
-        });
-
-        log({taskId: taskId, message: "Waiting retrydelay, and then trying again. If retrydelay isn't specified, defaulting to 5sec", type: "info"})
-        if(retryDelay){
-            await sleep(Number(retryDelay))
-        } else{
-            await sleep(5000)
         }
-    }
 
-    const transactionUrl = "https://api-mainnet.magiceden.io/v2/instructions/buy_now?buyer="+wallet.publicKey.toBase58()+"&seller="+snipeObject.sellerId+"&auctionHouseAddress="+snipeObject.auctionHouseKey+"&tokenMint="+snipeObject.tokenMintKey+"&tokenATA="+snipeObject.tokenAtaKey+"&price="+snipeObject.price+"&sellerReferral="+snipeObject.sellerReferral+"&sellerExpiry=0";
-    const sendTransactionData = await axios.post("http://185.38.142.173/api/magiceden/getsite",{"url": transactionUrl});
-    const error = sendTransactionData.data.error;
-    if(error){return;}
-    const responseText = sendTransactionData.data.textResponse;
-    const responseTextJson = JSON.parse(responseText);
-    const respBuffer = responseTextJson.tx.data;
-    let transaction = new Transaction();
-    try{
-        transaction = Transaction.populate(web3.Message.from(respBuffer));
-    } catch(e){
-        console.log(e);
-        return;
-    }
-    const blockHash = await connection.getRecentBlockhash("finalized");
-    transaction.recentBlockhash = blockHash.blockhash;
+        log({taskId: taskId, message: "Found an item, trying to snipe...", type: "info"})
+        const transactionUrl = "https://api-mainnet.magiceden.dev/v2/instructions/buy_now?buyer="+wallet.publicKey.toBase58()+"&seller="+snipeObject.sellerId+"&auctionHouseAddress="+snipeObject.auctionHouseKey+"&tokenMint="+snipeObject.tokenMintKey+"&tokenATA="+snipeObject.tokenAtaKey+"&price="+snipeObject.price+"&sellerReferral="+snipeObject.sellerReferral+"&sellerExpiry=0";
+        const sendTransactionData = await axios.get(transactionUrl);
+        const responseTextJson = sendTransactionData.data;
+        const respBuffer = responseTextJson.tx.data;
+        let transaction = new Transaction();
+        try{
+            transaction = Transaction.populate(web3.Message.from(respBuffer));
+        } catch(e){
+            console.log(e);
+            return;
+        }
+        const blockHash = await connection.getRecentBlockhash("finalized");
+        transaction.recentBlockhash = blockHash.blockhash;
 
-    try{
-        await wallet.signTransaction(transaction);
-    } catch(e){
-        console.log(e);
-        return;
-    }
-    try{
-        const tx = await web3.sendAndConfirmRawTransaction(connection, transaction.serialize());
-        console.log(tx);
-        await QueueWebhook(tx, "ME-V2-PRICE SNIPE","MAINNET")
-    } catch(e){
-        console.log(e);
+        try{
+            await wallet.signTransaction(transaction);
+        } catch(e){
+            console.log(e);
+            return;
+        }
+        try{
+            const tx = await web3.sendAndConfirmRawTransaction(connection, transaction.serialize());
+            console.log(tx);
+            await QueueWebhook(tx, "ME-V2-PRICE SNIPE","MAINNET")
+            hasSniped = true;
+        } catch(e){
+            console.log(e);
+        }
     }
 }

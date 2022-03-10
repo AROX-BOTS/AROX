@@ -8,7 +8,7 @@ import {sleep} from "./utils/candyMachineUtilities";
 import {VersionChecker} from "./utils/versionChecker";
 import {log} from "./utils/modules/sharedTaskFunctions";
 
-export const version = "BETA 0.2"
+export const version = "BETA 0.5"
 /*
 Notes:
 Hele starten er IKKE async, da vi gerne vil tjekke om tingene eksisterer og om licens etc. er valid før vi kører resten af programmet
@@ -27,6 +27,9 @@ const configFile = path.join(appdataPath, 'SAB', 'Config.json');
 // @ts-ignore
 const taskFile = path.join(appdataPath, 'SAB', 'Tasks.csv');
 
+// @ts-ignore
+const solWallets = path.join(appdataPath, 'SAB', 'Solana Wallets.csv');
+
 if (!fs.existsSync(configFolder)){
     fs.mkdirSync(configFolder);
 }
@@ -44,6 +47,9 @@ if (!fs.existsSync(configFile)){
 
 if (!fs.existsSync(taskFile)){
     fs.writeFileSync(taskFile,'"TYPE","URL","WALLET","CONTRACT","CUSTOMSTART","CUSTOMRPC","RETRYDELAY"');
+}
+if (!fs.existsSync(solWallets)){
+    fs.writeFileSync(solWallets,'"NAME","PRIVKEY"');
 }
 
 const initializationSteps = async (): Promise<void> => {
