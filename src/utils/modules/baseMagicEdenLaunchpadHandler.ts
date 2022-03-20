@@ -62,11 +62,11 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
     );
     log({taskId: taskId, message: "Candy machine functions initialised", type: "success"});
     log({taskId: taskId, message: "Items remaining in machine: " + state.itemsRemaining + ", total redeemed: " + state.itemsRedeemed + ", total available: " + state.itemsAvailable, type: "info"});
-
+/*
     if(state.itemsRemaining == 0){
         log({taskId: taskId, message: "No items left to mint", type: "critical"});
         return;
-    }
+    } */
 
     const mintKeys = anchor.web3.Keypair.generate();
     const metadata = await getMetadata(mintKeys.publicKey);
@@ -85,7 +85,7 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
 
     let mintToken;
     try{
-        mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo);
+        mintToken = await mintOneToken(state.candyMachine, wallet.publicKey, mintKeys, tokenWallet, connection, state.candyMachine.program, state.wallet, state.config, metadata, masterEdition, rentExemption, state.notary, walletLimitArrayZero, walletLimitArrayOne, raffleTicketInfo, raffleEscrowInformation, launchStagesInfo, state.orderInfo);
     } catch(e){
         console.log(e);
     }
@@ -105,16 +105,7 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
             await sleep(now);
         }
     } else{
-        // @ts-ignore
-        while(currentDate.getTime() <= candyMachineState.state.goLiveDate.toNumber()){
-            // @ts-ignore
-            let now = candyMachineState.goLiveDate - Date.now();
-            if(0>now){
-                break;
-            }
-            log({taskId: taskId, message: "Sale not live, sleeping "+now+"ms and then running", type: "info"});
-            await sleep(now);
-        }
+        log({taskId: taskId, message: "No start time set. Launching.", type: "info"});
     }
 
     const blockHash = await connection.getRecentBlockhash("finalized");

@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import { MintLayout, TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import {sleep} from "./candy-machine";
-import {TransactionInstruction} from "@solana/web3.js";
+import {PublicKey, TransactionInstruction} from "@solana/web3.js";
 import bs58 from "bs58";
 export const ME_CANDY_MACHINE_PROGRAM = new anchor.web3.PublicKey("CMZYPASGWeTz7RNGHaRJfCq2XQ5pYK6nDvVQxzkH51zb");
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new anchor.web3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
@@ -23,7 +23,7 @@ interface MeCandyMachineState {
     config: anchor.web3.PublicKey;
     notary: anchor.web3.PublicKey;
     bump: number;
-
+    orderInfo: anchor.web3.PublicKey;
 }
 
 interface WalletLimitData {
@@ -156,6 +156,7 @@ export const getLaunchpadCandyMachineState = async (
     const config = state.config;
     const notary = state.notary;
     const bump = state.bump;
+    const orderInfo = state.orderInfo;
 
     return {
         candyMachine,
@@ -166,7 +167,8 @@ export const getLaunchpadCandyMachineState = async (
         wallet,
         config,
         notary,
-        bump
+        bump,
+        orderInfo
     };
 }
 
@@ -300,15 +302,13 @@ export const getMasterEdition = async (
 };
 
 
-export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mintAccount: any, tokenWallet: any, connection: any, program: any, wallet: any, config: any, metadata: any, masterEdition: any, rentExemption: any, notary: any, walletLimitPubkey: any, walletLimitOne: any, raffleTicketInfo: any, raffleTicketEscrow: any, launchStagesInfo: any) => {
+export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mintAccount: any, tokenWallet: any, connection: any, program: any, wallet: any, config: any, metadata: any, masterEdition: any, rentExemption: any, notary: any, walletLimitPubkey: any, walletLimitOne: any, raffleTicketInfo: any, raffleTicketEscrow: any, launchStagesInfo: any, orderInfo: any) => {
     const accounts = {
         config: config,
         candyMachine: candyMachine.id,
         launchStagesInfo: launchStagesInfo,
         payer: payerUserWallet,
         wallet: wallet,
-        //raffleTicket: raffleTicketInfo,
-        //raffleEscrow: raffleTicketEscrow,
         mint: mintAccount.publicKey,
         metadata: metadata,
         masterEdition: masterEdition,
@@ -319,7 +319,9 @@ export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mint
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        clock: anchor.web3.SYSVAR_CLOCK_PUBKEY
+        clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+        orderInfo: orderInfo,
+        slotHashes: new PublicKey("SysvarS1otHashes111111111111111111111111111")
     };
 
     const defaultPubKey = {
@@ -345,7 +347,7 @@ export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mint
     });
 
     try{
-        const transaction = program.transaction.mintNft(walletLimitOne, {
+        const transaction = program.transaction.mintNft(walletLimitOne, false, {
             'accounts': accounts,
             'signers': [mintAccount],
             'remainingAccounts': [defaultPubKey, userKey, notaryKey],
