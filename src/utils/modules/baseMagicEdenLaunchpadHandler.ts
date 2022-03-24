@@ -128,6 +128,7 @@ export const MagicEdenLaunchpadHandler = async(taskId: number, wallet: anchor.Wa
         }
     }
     if(signMint.data.publicKey != state.notary.toBase58() || signMint.data.error){
+        if(signMint.data.error){console.log(signMint.data)}
         while(signMint.data.publicKey != state.notary.toBase58()){
             log({taskId: taskId, message: "Error getting correct signature from ME, retrying", type: "error"});
             try{

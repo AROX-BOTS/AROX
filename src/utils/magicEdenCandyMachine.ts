@@ -228,6 +228,20 @@ export const getLaunchStagesInfo = async (
     )[0];
 };
 
+async function findAssociatedTokenAddress(
+    walletAddress: PublicKey,
+    tokenMintAddress: PublicKey
+): Promise<PublicKey> {
+    return (await PublicKey.findProgramAddress(
+        [
+            walletAddress.toBuffer(),
+            TOKEN_PROGRAM_ID.toBuffer(),
+            tokenMintAddress.toBuffer(),
+        ],
+        SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+    ))[0];
+}
+
 export const getTokenWallet = async (
     wallet: anchor.web3.PublicKey,
     mint: anchor.web3.PublicKey
@@ -303,6 +317,7 @@ export const getMasterEdition = async (
 
 
 export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mintAccount: any, tokenWallet: any, connection: any, program: any, wallet: any, config: any, metadata: any, masterEdition: any, rentExemption: any, notary: any, walletLimitPubkey: any, walletLimitOne: any, raffleTicketInfo: any, raffleTicketEscrow: any, launchStagesInfo: any, orderInfo: any) => {
+    const tokenAddress = await findAssociatedTokenAddress(payerUserWallet, mintAccount.publicKey);
     const accounts = {
         config: config,
         candyMachine: candyMachine.id,
@@ -310,6 +325,7 @@ export const mintOneToken = async (candyMachine: any, payerUserWallet: any, mint
         payer: payerUserWallet,
         wallet: wallet,
         mint: mintAccount.publicKey,
+        tokenAta: tokenAddress,
         metadata: metadata,
         masterEdition: masterEdition,
         walletLimitInfo: walletLimitPubkey,

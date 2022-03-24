@@ -77,7 +77,7 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     if(customStart != undefined){
         log({taskId: taskId, message: "Using custom start date...", type: "info"});
         while(currentDate.valueOf() <= customStart){
-            let now= currentDate.valueOf() - customStart;
+            let now= customStart - currentDate.valueOf();
             if(0>now) break;
             log({taskId: taskId, message: "Haven't reached custom start date, sleeping"+now+"ms and checking again. Current time: " + currentDate.valueOf(), type: "info"});
             await sleep(500);
