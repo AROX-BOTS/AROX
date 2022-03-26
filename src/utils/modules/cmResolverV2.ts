@@ -8,7 +8,7 @@ import {
 import {log} from './sharedTaskFunctions';
 import {QueueWebhook} from "../webhookHandler";
 import {QueueMintStatusLog} from "../mintStatusLogger";
-import {sendAndConfirmRawTransaction} from "@solana/web3.js";
+import {sendAndConfirmRawTransaction, Transaction} from "@solana/web3.js";
 
 export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet, rpcHost: string | undefined, candyMachineId: string | undefined, mintUrl: string | undefined, customStart: number | undefined, customRpc: string | undefined, retryDelay: string | undefined): Promise<void> => {
     if(wallet == undefined){
@@ -57,16 +57,15 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
     // @ts-ignore
     log({taskId: taskId, message: "Items remaining in machine: " + candyMachineState.state.itemsRemaining + ", Live at: " + candyMachineState.state.goLiveDate.toNumber() + ", total redeemed: " + candyMachineState.state.itemsRedeemed + ", total available: " + candyMachineState.state.itemsAvailable + " price: " + price / 1000000000+"SOL", type: "info"});
 
-    if(candyMachineState.state.itemsRemaining == 0){
+   /* if(candyMachineState.state.itemsRemaining == 0){
         log({taskId: taskId, message: "No items left to mint", type: "critical"});
         return;
-    }
+    }*/
 
     // @ts-ignore
     if(customStart == "") customStart = undefined;
 
     let currentDate = new Date();
-    const transactionInstructions = await mintOneToken(candyMachineState, wallet.publicKey);
         /*await sendTransactions(
                 candyMachine.program.provider.connection,
                 candyMachine.program.provider.wallet,
@@ -93,27 +92,14 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
         }
     }
 
-    log({taskId: taskId, message: "Sale live, trying to mint...", type: "info"});
-    const blockHash = await connection.getRecentBlockhash("finalized");
-    transactionInstructions.recentBlockhash = blockHash.blockhash;
-
     try {
         if (wallet) {
             let status;
             let mintTxId;
             try{
+                log({taskId: taskId, message: "Sale live, trying to mint...", type: "info"});
+                const transactionInstructions = await mintOneToken(candyMachineState, wallet.publicKey, taskId);
 
-                mintTxId = await sendAndConfirmRawTransaction(connection, transactionInstructions.serialize());
-
-                log({taskId: taskId, message: "Sent mint, awaiting transaction confirmation", type: "info"});
-                status = await awaitTransactionSignatureConfirmation(
-                    // @ts-ignore
-                    mintTxId[0],
-                    15000, //default 15k
-                    connection,
-                    "singleGossip",
-                    true
-                );
             } catch(e){
                 log({taskId: taskId, message: "Encountered error, retrying.", type: "critical"});
                 if(retryDelay != undefined){
@@ -122,45 +108,16 @@ export const CandyMachineResolveV2 = async(taskId: number, wallet: anchor.Wallet
                 } else{
                     await sleep(500);
                 }
-            }
-
-            // @ts-ignore
-            while(status.err){
-                try{
-                    mintTxId = await sendAndConfirmRawTransaction(connection, transactionInstructions.serialize());
-
-                    log({taskId: taskId, message: "Finalised mint, awaiting transaction confirmation", type: "info"});
-                    status = await awaitTransactionSignatureConfirmation(
+                let error = true
+                while(error){
+                    try{
+                        log({taskId: taskId, message: "Retrying...", type: "info"});
+                        const transactionInstructions = await mintOneToken(candyMachineState, wallet.publicKey, taskId);
+                    } catch(e){
                         // @ts-ignore
-                        mintTxId[0],
-                        15000, //default 15k
-                        connection,
-                        "singleGossip",
-                        true
-                    );
-                } catch(e){
-                    log({taskId: taskId, message: "Encountered error, retrying after delay.", type: "critical"});
-                    if(retryDelay != undefined){
-                        log({taskId: taskId, message: "Using custom retry delay.", type: "info"});
-                        await sleep(Number(retryDelay));
-                    } else{
-                        await sleep(500);
+                        log({taskId: taskId, message: "Error: " + e.message, type: "info"});
                     }
                 }
-            }
-
-            // @ts-ignore
-            if (status.err === null) {
-                log({taskId: taskId, message: "Finalised mint of 1 token, TX: " + mintTxId, type: "success"});
-                try{
-                    // @ts-ignore
-                    await QueueWebhook(mintTxId[0], "", "mainnet-beta");
-                    await QueueMintStatusLog("", true);
-                } catch{}
-            } else {
-
-                log({taskId: taskId, message: "Encountered error on minting of 1 token", type: "critical"});
-                await QueueMintStatusLog("", false);
             }
         }
     } catch (error: any) {

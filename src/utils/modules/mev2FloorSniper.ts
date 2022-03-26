@@ -77,7 +77,7 @@ export async function Mev2FloorSniper(taskId: number, wallet: anchor.Wallet, key
 
         log({taskId: taskId, message: "Found an item, trying to snipe...", type: "info"})
         const transactionUrl = "https://api-mainnet.magiceden.dev/v2/instructions/buy_now?buyer="+wallet.publicKey.toBase58()+"&seller="+snipeObject.sellerId+"&auctionHouseAddress="+snipeObject.auctionHouseKey+"&tokenMint="+snipeObject.tokenMintKey+"&tokenATA="+snipeObject.tokenAtaKey+"&price="+snipeObject.price+"&sellerReferral="+snipeObject.sellerReferral+"&sellerExpiry=0";
-        const sendTransactionData = await axios.get(transactionUrl);
+        const sendTransactionData = await axios.get(transactionUrl, {headers: {'authority': 'api-mainnet.magiceden.io','origin':'https://magiceden.io','referer':'https://magiceden.io/','sec-fetch-site':'same-site','sec-fetch-mode':'cors','sec-fetch-dest':'empty'}});
         const responseTextJson = sendTransactionData.data;
         const respBuffer = responseTextJson.tx.data;
         let transaction = new Transaction();
@@ -97,7 +97,7 @@ export async function Mev2FloorSniper(taskId: number, wallet: anchor.Wallet, key
             return;
         }
         try{
-            const tx = await web3.sendAndConfirmRawTransaction(connection, transaction.serialize());
+            const tx = await web3.sendAndConfirmRawTransaction(connection, transaction.serialize(),{skipPreflight: true});
             console.log(tx);
             await QueueWebhook(tx, "ME-V2-PRICE SNIPE","MAINNET")
             hasSniped = true;
